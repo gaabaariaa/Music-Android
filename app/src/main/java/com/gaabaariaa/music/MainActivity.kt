@@ -56,6 +56,7 @@ class MainActivity:ComponentActivity(){
  override fun onDestroy(){scope.cancel();player.release();db.close();super.onDestroy()}
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun MusicApp(db:MusicDatabase,player:MusicPlayerManager,permission:Boolean,scanning:Boolean,result:String,onPermission:()->Unit){
  val songs by db.songDao().observeSongs().collectAsState(emptyList())
