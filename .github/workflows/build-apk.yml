@@ -1,5 +1,5 @@
 name: Android APK Build
-# trigger: build verification
+# trigger: build verification v3
 
 on:
   push:
