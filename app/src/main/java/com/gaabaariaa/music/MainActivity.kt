@@ -1,3 +1,5 @@
+@file:OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+
 package com.gaabaariaa.music
 
 import android.Manifest
@@ -78,7 +80,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(androidx.media3.common.util.UnstableApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
+@OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun MusicApp(
     db: MusicDatabase,
