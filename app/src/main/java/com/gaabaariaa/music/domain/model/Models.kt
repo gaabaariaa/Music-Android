@@ -31,6 +31,8 @@ data class ScanState(
     val failed: Boolean = false
 )
 
+enum class SongSort { TITLE, ARTIST, ALBUM, DATE_ADDED, DURATION }
+
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
 enum class Accent { PURPLE, BLUE, GREEN, ORANGE, RED }

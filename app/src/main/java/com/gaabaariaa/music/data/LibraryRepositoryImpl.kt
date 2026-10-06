@@ -41,6 +41,21 @@ class LibraryRepositoryImpl @Inject constructor(
     override fun observeFolders(): Flow<List<FolderSummary>> =
         dao.observeFolders().map { list -> list.map { FolderSummary(it.path, it.songCount) } }
 
+    override fun observeSongsByArtist(artist: String): Flow<List<Song>> =
+        dao.observeSongsByArtist(artist).map { list -> list.map { it.toDomain() } }
+
+    override fun observeSongsByAlbum(album: String): Flow<List<Song>> =
+        dao.observeSongsByAlbum(album).map { list -> list.map { it.toDomain() } }
+
+    override fun observeSongsByGenre(genre: String): Flow<List<Song>> =
+        dao.observeSongsByGenre(genre).map { list -> list.map { it.toDomain() } }
+
+    override fun observeSongsByFolder(folder: String): Flow<List<Song>> =
+        dao.observeSongsByFolder(folder).map { list -> list.map { it.toDomain() } }
+
+    override fun observeAlbumsByArtist(artist: String): Flow<List<AlbumSummary>> =
+        dao.observeAlbumsByArtist(artist).map { list -> list.map { AlbumSummary(it.name, it.artist, it.songCount) } }
+
     override suspend fun scan(): Int = withContext(io) {
         val found = querySongs()
         val existingIds = dao.allIds()

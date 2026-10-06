@@ -66,6 +66,24 @@ interface SongDao {
     @Query("SELECT folder AS path, COUNT(*) AS songCount FROM songs GROUP BY folder ORDER BY folder COLLATE NOCASE")
     fun observeFolders(): Flow<List<FolderRow>>
 
+    @Query("SELECT * FROM songs WHERE artist = :artist ORDER BY album COLLATE NOCASE, track, title COLLATE NOCASE")
+    fun observeSongsByArtist(artist: String): Flow<List<SongEntity>>
+
+    @Query("SELECT * FROM songs WHERE album = :album ORDER BY track, title COLLATE NOCASE")
+    fun observeSongsByAlbum(album: String): Flow<List<SongEntity>>
+
+    @Query("SELECT * FROM songs WHERE genre = :genre ORDER BY title COLLATE NOCASE")
+    fun observeSongsByGenre(genre: String): Flow<List<SongEntity>>
+
+    @Query("SELECT * FROM songs WHERE folder = :folder ORDER BY title COLLATE NOCASE")
+    fun observeSongsByFolder(folder: String): Flow<List<SongEntity>>
+
+    @Query(
+        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount FROM songs " +
+            "WHERE artist = :artist GROUP BY album ORDER BY album COLLATE NOCASE"
+    )
+    fun observeAlbumsByArtist(artist: String): Flow<List<AlbumRow>>
+
     @Query("SELECT mediaStoreId FROM songs")
     suspend fun allIds(): List<Long>
 

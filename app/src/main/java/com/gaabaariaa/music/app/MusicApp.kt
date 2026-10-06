@@ -24,9 +24,14 @@ import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
+import androidx.navigation.navArgument
 import com.gaabaariaa.music.R
+import com.gaabaariaa.music.feature.library.DETAIL_ROUTE
+import com.gaabaariaa.music.feature.library.DetailScreen
 import com.gaabaariaa.music.feature.library.LibraryScreen
+import com.gaabaariaa.music.feature.library.detailRoute
 import com.gaabaariaa.music.feature.player.MiniPlayer
 import com.gaabaariaa.music.feature.player.NowPlayingScreen
 import com.gaabaariaa.music.feature.player.PlayerViewModel
@@ -96,7 +101,29 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
             startDestination = Routes.LIBRARY,
             modifier = Modifier.padding(bottom = padding.calculateBottomPadding())
         ) {
-            composable(Routes.LIBRARY) { LibraryScreen(onPlay = playerViewModel::playQueue) }
+            composable(Routes.LIBRARY) {
+                LibraryScreen(
+                    onPlay = playerViewModel::playQueue,
+                    onPlayNext = playerViewModel::playNext,
+                    onAddToQueue = playerViewModel::addToQueue,
+                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) }
+                )
+            }
+            composable(
+                route = DETAIL_ROUTE,
+                arguments = listOf(
+                    navArgument("type") { type = NavType.StringType },
+                    navArgument("value") { type = NavType.StringType }
+                )
+            ) {
+                DetailScreen(
+                    onBack = { navController.popBackStack() },
+                    onPlay = playerViewModel::playQueue,
+                    onPlayNext = playerViewModel::playNext,
+                    onAddToQueue = playerViewModel::addToQueue,
+                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) }
+                )
+            }
             composable(Routes.SETTINGS) { SettingsScreen() }
             composable(Routes.NOW_PLAYING) {
                 NowPlayingScreen(

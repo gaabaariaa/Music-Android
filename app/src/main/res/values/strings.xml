@@ -60,4 +60,20 @@
     <string name="accent_green">Green</string>
     <string name="accent_orange">Orange</string>
     <string name="accent_red">Red</string>
+    <string name="search_hint">Search songs</string>
+    <string name="clear_search">Clear search</string>
+    <string name="no_results">No matching songs.</string>
+    <string name="sort">Sort</string>
+    <string name="sort_title">Title</string>
+    <string name="sort_artist">Artist</string>
+    <string name="sort_album">Album</string>
+    <string name="sort_date_added">Recently added</string>
+    <string name="sort_duration">Longest first</string>
+    <string name="more_options">More options</string>
+    <string name="menu_play_next">Play next</string>
+    <string name="menu_add_to_queue">Add to queue</string>
+    <string name="menu_share">Share</string>
+    <string name="toast_play_next">Will play next</string>
+    <string name="toast_added_to_queue">Added to queue</string>
+    <string name="play_all">Play all</string>
 </resources>
