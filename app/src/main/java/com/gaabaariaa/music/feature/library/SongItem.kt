@@ -39,6 +39,7 @@ fun SongItem(
     onPlayNext: (Song) -> Unit,
     onAddToQueue: (Song) -> Unit,
     onEditTags: (Song) -> Unit,
+    onFindArtwork: (Song) -> Unit,
     selectionMode: Boolean = false,
     selected: Boolean = false,
     onSelect: (() -> Unit)? = null
@@ -95,6 +96,13 @@ fun SongItem(
                 onClick = {
                     menuOpen = false
                     onEditTags(song)
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_find_artwork)) },
+                onClick = {
+                    menuOpen = false
+                    onFindArtwork(song)
                 }
             )
             if (onSelect != null) {

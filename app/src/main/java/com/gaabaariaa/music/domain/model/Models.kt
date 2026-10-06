@@ -49,3 +49,9 @@ enum class TagField { TITLE, ARTIST, ALBUM, ALBUM_ARTIST, GENRE, YEAR, TRACK, DI
 typealias TagValues = Map<TagField, String>
 
 data class TagWriteResult(val saved: Int, val failed: Int, val permissionDenied: Boolean = false)
+
+data class ArtworkCandidate(val releaseId: String, val title: String, val artist: String, val year: String)
+
+enum class ArtworkError { OFFLINE, SERVER }
+
+data class ArtworkSearchResult(val candidates: List<ArtworkCandidate>, val error: ArtworkError? = null)

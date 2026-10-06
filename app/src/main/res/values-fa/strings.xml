@@ -113,4 +113,19 @@
     <string name="field_composer">آهنگساز</string>
     <string name="field_comment">توضیحات</string>
     <string name="field_lyrics">متن آهنگ</string>
+    <string name="menu_find_artwork">پیدا کردن کاور</string>
+    <string name="artwork_title">کاور</string>
+    <string name="artwork_search">جستجوی کاور</string>
+    <string name="artwork_embed">جاسازی در فایل</string>
+    <string name="artwork_save_pictures">ذخیره در Pictures</string>
+    <string name="artwork_remove">حذف کاور داخل فایل</string>
+    <string name="artwork_embedded">کاور در فایل جاسازی شد</string>
+    <string name="artwork_removed">کاور حذف شد</string>
+    <string name="artwork_saved_pictures">در Pictures/Musiq ذخیره شد</string>
+    <string name="artwork_save_failed">ذخیره‌ی تصویر ممکن نشد (به اندروید ۱۰ یا بالاتر نیاز دارد).</string>
+    <string name="artwork_download_failed">دانلود کاور ممکن نشد.</string>
+    <string name="artwork_offline">اتصال اینترنت وجود ندارد. جستجوی کاور به اینترنت نیاز دارد.</string>
+    <string name="artwork_server_error">سرویس کاور پاسخ نمی‌دهد. بعداً دوباره امتحان کنید.</string>
+    <string name="artwork_no_results">کاوری پیدا نشد. نام آلبوم یا هنرمند دیگری امتحان کنید.</string>
+    <string name="artwork_attribution">اطلاعات از MusicBrainz و تصاویر از Cover Art Archive.</string>
 </resources>

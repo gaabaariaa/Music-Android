@@ -24,8 +24,19 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
+import androidx.compose.runtime.collectAsState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.withContext
+
+/** Bumped after artwork changes so every visible cover reloads. */
+object ArtworkRefresh {
+    private val _version = MutableStateFlow(0)
+    val version: StateFlow<Int> = _version.asStateFlow()
+    fun bump() { _version.value += 1 }
+}
 
 /**
  * Shows the embedded cover of a song. Loading thumbnails needs Android 10+;
@@ -34,7 +45,8 @@ import kotlinx.coroutines.withContext
 @Composable
 fun SongArtwork(songId: String, modifier: Modifier = Modifier, sizePx: Int = 512) {
     val context = LocalContext.current
-    val bitmap by produceState<ImageBitmap?>(initialValue = null, songId) {
+    val version by ArtworkRefresh.version.collectAsState()
+    val bitmap by produceState<ImageBitmap?>(initialValue = null, songId, version) {
         val id = songId.toLongOrNull()
         value = if (id != null && Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
             withContext(Dispatchers.IO) {

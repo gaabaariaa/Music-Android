@@ -14,6 +14,8 @@ import android.provider.MediaStore
 import com.gaabaariaa.music.core.di.IoDispatcher
 import com.gaabaariaa.music.core.util.parseTrackNumber
 import com.gaabaariaa.music.core.util.parseYear
+import com.gaabaariaa.music.data.files.SafeFileWriter
+import com.gaabaariaa.music.data.files.WriteOutcome
 import com.gaabaariaa.music.data.local.SongDao
 import com.gaabaariaa.music.domain.model.TagField
 import com.gaabaariaa.music.domain.model.TagValues
@@ -21,13 +23,10 @@ import com.gaabaariaa.music.domain.model.TagWriteResult
 import com.gaabaariaa.music.domain.repository.TagRepository
 import com.kyant.taglib.TagLib
 import dagger.hilt.android.qualifiers.ApplicationContext
-import java.io.File
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.withContext
-
-private enum class Outcome { OK, FAILED, DENIED }
 
 private val TagField.key: String
     get() = when (this) {
@@ -49,6 +48,7 @@ class TaglibTagRepository @Inject constructor(
     @ApplicationContext private val context: Context,
     private val resolver: ContentResolver,
     private val dao: SongDao,
+    private val writer: SafeFileWriter,
     @IoDispatcher private val io: CoroutineDispatcher
 ) : TagRepository {
 
@@ -86,9 +86,9 @@ class TaglibTagRepository @Inject constructor(
         var failed = 0
         for (id in songIds) {
             when (writeOne(id, changes)) {
-                Outcome.OK -> saved++
-                Outcome.FAILED -> failed++
-                Outcome.DENIED -> return@withContext TagWriteResult(saved, failed + 1, permissionDenied = true)
+                WriteOutcome.OK -> saved++
+                WriteOutcome.FAILED -> failed++
+                WriteOutcome.DENIED -> return@withContext TagWriteResult(saved, failed + 1, permissionDenied = true)
             }
         }
         TagWriteResult(saved, failed)
@@ -102,37 +102,11 @@ class TaglibTagRepository @Inject constructor(
         null
     }
 
-    private suspend fun writeOne(id: Long, changes: TagValues): Outcome {
+    private suspend fun writeOne(id: Long, changes: TagValues): WriteOutcome {
         val uri = uriOf(id)
-        val dir = File(context.cacheDir, "tag-backup").apply { mkdirs() }
-        val backup = File(dir, "$id.bak")
-        try {
-            // 1. Safety copy of the original file.
-            val copied = resolver.openInputStream(uri)?.use { input ->
-                backup.outputStream().use { input.copyTo(it) }
-                true
-            } ?: false
-            if (!copied) return Outcome.FAILED
-
-            // 2. Write, then read back and compare.
-            val ok = try {
-                applyChanges(uri, changes)
-            } catch (e: SecurityException) {
-                return Outcome.DENIED
-            } catch (e: Exception) {
-                false
-            }
-            if (!ok) {
-                restore(uri, backup)
-                return Outcome.FAILED
-            }
-
-            // 3. Keep the library in sync and ask MediaStore to re-index the file.
-            updateDatabase(id, changes)
-            return Outcome.OK
-        } finally {
-            backup.delete()
-        }
+        val outcome = writer.write(uri, id) { applyChanges(uri, changes) }
+        if (outcome == WriteOutcome.OK) updateDatabase(id, changes)
+        return outcome
     }
 
     private fun applyChanges(uri: Uri, changes: TagValues): Boolean {
@@ -155,16 +129,6 @@ class TaglibTagRepository @Inject constructor(
                 field == TagField.LYRICS || field == TagField.COMMENT -> !stored.isNullOrEmpty()
                 else -> stored == value.trim()
             }
-        }
-    }
-
-    private fun restore(uri: Uri, backup: File) {
-        try {
-            resolver.openOutputStream(uri, "wt")?.use { out ->
-                backup.inputStream().use { it.copyTo(out) }
-            }
-        } catch (e: Exception) {
-            // Nothing more can be done; the caller reports the failure.
         }
     }
 

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
@@ -74,6 +75,7 @@ fun LibraryScreen(
     onAddToQueue: (Song) -> Unit,
     onOpenDetail: (DetailType, String) -> Unit,
     onEditTags: () -> Unit,
+    onFindArtwork: () -> Unit,
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -113,6 +115,13 @@ fun LibraryScreen(
                     actions = {
                         IconButton(onClick = { viewModel.selectAll(songs.map { it.id }) }) {
                             Icon(Icons.Default.SelectAll, stringResource(R.string.select_all))
+                        }
+                        IconButton(onClick = {
+                            viewModel.startTagEdit(selection.toList())
+                            onFindArtwork()
+                            viewModel.clearSelection()
+                        }) {
+                            Icon(Icons.Default.Image, stringResource(R.string.menu_find_artwork))
                         }
                         IconButton(onClick = {
                             viewModel.startTagEdit(selection.toList())
@@ -174,6 +183,10 @@ fun LibraryScreen(
                             onEditTags = {
                                 viewModel.startTagEdit(listOf(it.id))
                                 onEditTags()
+                            },
+                            onFindArtwork = {
+                                viewModel.startTagEdit(listOf(it.id))
+                                onFindArtwork()
                             },
                             onToggleSelect = viewModel::toggleSelection
                         )
@@ -250,6 +263,7 @@ fun SongList(
     onPlayNext: (Song) -> Unit,
     onAddToQueue: (Song) -> Unit,
     onEditTags: (Song) -> Unit,
+    onFindArtwork: (Song) -> Unit,
     onToggleSelect: (Long) -> Unit
 ) {
     if (songs.isEmpty()) {
@@ -268,6 +282,7 @@ fun SongList(
                 onPlayNext = onPlayNext,
                 onAddToQueue = onAddToQueue,
                 onEditTags = onEditTags,
+                onFindArtwork = onFindArtwork,
                 selectionMode = selectionMode,
                 selected = song.id in selection,
                 onSelect = { onToggleSelect(song.id) }
