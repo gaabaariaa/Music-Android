@@ -11,6 +11,7 @@ import com.gaabaariaa.music.domain.model.Song
 import com.gaabaariaa.music.domain.model.SongSort
 import com.gaabaariaa.music.domain.repository.LibraryRepository
 import com.gaabaariaa.music.domain.repository.LibraryScanner
+import com.gaabaariaa.music.feature.tags.TagEditSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.Dispatchers
@@ -25,7 +26,8 @@ import kotlinx.coroutines.flow.stateIn
 @HiltViewModel
 class LibraryViewModel @Inject constructor(
     repository: LibraryRepository,
-    private val scanner: LibraryScanner
+    private val scanner: LibraryScanner,
+    private val tagSession: TagEditSession
 ) : ViewModel() {
 
     private val _query = MutableStateFlow("")
@@ -53,6 +55,19 @@ class LibraryViewModel @Inject constructor(
 
     val scanState: StateFlow<ScanState> = scanner.state
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ScanState())
+
+    private val _selection = MutableStateFlow<Set<Long>>(emptySet())
+    val selection: StateFlow<Set<Long>> = _selection.asStateFlow()
+
+    fun toggleSelection(id: Long) {
+        _selection.value = _selection.value.let { if (id in it) it - id else it + id }
+    }
+
+    fun selectAll(ids: List<Long>) { _selection.value = ids.toSet() }
+    fun clearSelection() { _selection.value = emptySet() }
+
+    /** Prepares the tag editor for these songs; the caller then navigates to it. */
+    fun startTagEdit(ids: List<Long>) { tagSession.songIds = ids }
 
     fun setQuery(value: String) { _query.value = value }
     fun setSort(value: SongSort) { _sort.value = value }

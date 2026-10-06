@@ -47,11 +47,13 @@ import com.gaabaariaa.music.feature.player.MiniPlayer
 import com.gaabaariaa.music.feature.player.NowPlayingScreen
 import com.gaabaariaa.music.feature.player.PlayerViewModel
 import com.gaabaariaa.music.feature.settings.SettingsScreen
+import com.gaabaariaa.music.feature.tags.TagEditorScreen
 
 private object Routes {
     const val LIBRARY = "library"
     const val SETTINGS = "settings"
     const val NOW_PLAYING = "now_playing"
+    const val TAGS = "tags"
 }
 
 private data class TopLevelDestination(val route: String, val label: Int, val icon: ImageVector)
@@ -68,6 +70,7 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val inNowPlaying = destination?.route == Routes.NOW_PLAYING
+    val hideBottomBar = inNowPlaying || destination?.route == Routes.TAGS
 
     // Android 13+: ask for notification permission once, when playback first starts.
     val context = LocalContext.current
@@ -86,7 +89,7 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
-            if (!inNowPlaying) {
+            if (!hideBottomBar) {
                 Column {
                     if (player.hasMedia) {
                         MiniPlayer(
@@ -131,7 +134,8 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onPlay = playerViewModel::playQueue,
                     onPlayNext = playerViewModel::playNext,
                     onAddToQueue = playerViewModel::addToQueue,
-                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) }
+                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
+                    onEditTags = { navController.navigate(Routes.TAGS) }
                 )
             }
             composable(
@@ -146,10 +150,12 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onPlay = playerViewModel::playQueue,
                     onPlayNext = playerViewModel::playNext,
                     onAddToQueue = playerViewModel::addToQueue,
-                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) }
+                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
+                    onEditTags = { navController.navigate(Routes.TAGS) }
                 )
             }
             composable(Routes.SETTINGS) { SettingsScreen() }
+            composable(Routes.TAGS) { TagEditorScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.NOW_PLAYING) {
                 NowPlayingScreen(
                     state = player,

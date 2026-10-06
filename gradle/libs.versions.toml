@@ -16,6 +16,7 @@ media3 = "1.5.1"
 junit = "4.13.2"
 work = "2.10.0"
 hiltWork = "1.2.0"
+taglib = "1.0.6"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -42,6 +43,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
+taglib = { module = "io.github.kyant0:taglib", version.ref = "taglib" }
 junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]

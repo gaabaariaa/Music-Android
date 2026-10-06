@@ -43,3 +43,9 @@ data class AppSettings(
     val amoled: Boolean = false,
     val accent: Accent = Accent.PURPLE
 )
+
+enum class TagField { TITLE, ARTIST, ALBUM, ALBUM_ARTIST, GENRE, YEAR, TRACK, DISC, COMPOSER, COMMENT, LYRICS }
+
+typealias TagValues = Map<TagField, String>
+
+data class TagWriteResult(val saved: Int, val failed: Int, val permissionDenied: Boolean = false)

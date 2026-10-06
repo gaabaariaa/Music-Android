@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.Song
 import com.gaabaariaa.music.domain.repository.LibraryRepository
+import com.gaabaariaa.music.feature.tags.TagEditSession
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
@@ -16,7 +17,8 @@ import kotlinx.coroutines.flow.stateIn
 @HiltViewModel
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
-    repository: LibraryRepository
+    repository: LibraryRepository,
+    private val tagSession: TagEditSession
 ) : ViewModel() {
 
     val type: DetailType = DetailType.valueOf(savedStateHandle.get<String>("type").orEmpty())
@@ -33,4 +35,6 @@ class DetailViewModel @Inject constructor(
         DetailType.ARTIST -> repository.observeAlbumsByArtist(value)
         else -> flowOf(emptyList())
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun startTagEdit(ids: List<Long>) { tagSession.songIds = ids }
 }

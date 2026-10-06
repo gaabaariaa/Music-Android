@@ -72,3 +72,19 @@ class LibraryLogicTest {
         assertEquals("0:00", formatDuration(-5, Locale.US))
     }
 }
+
+class TagParsingTest {
+    @org.junit.Test
+    fun parsesYearFromFullDates() {
+        org.junit.Assert.assertEquals(2020, com.gaabaariaa.music.core.util.parseYear("2020-05-01"))
+        org.junit.Assert.assertEquals(1999, com.gaabaariaa.music.core.util.parseYear(" 1999 "))
+        org.junit.Assert.assertEquals(0, com.gaabaariaa.music.core.util.parseYear("unknown"))
+    }
+
+    @org.junit.Test
+    fun parsesTrackNumbersWithTotals() {
+        org.junit.Assert.assertEquals(5, com.gaabaariaa.music.core.util.parseTrackNumber("5/12"))
+        org.junit.Assert.assertEquals(7, com.gaabaariaa.music.core.util.parseTrackNumber("7"))
+        org.junit.Assert.assertEquals(0, com.gaabaariaa.music.core.util.parseTrackNumber(""))
+    }
+}
