@@ -8,6 +8,8 @@ import com.gaabaariaa.music.data.local.SongDao
 import com.gaabaariaa.music.data.local.SongEntity
 import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.ArtistSummary
+import com.gaabaariaa.music.domain.model.FolderSummary
+import com.gaabaariaa.music.domain.model.GenreSummary
 import com.gaabaariaa.music.domain.model.Song
 import com.gaabaariaa.music.domain.repository.LibraryRepository
 import javax.inject.Inject
@@ -33,6 +35,12 @@ class LibraryRepositoryImpl @Inject constructor(
     override fun observeAlbums(): Flow<List<AlbumSummary>> =
         dao.observeAlbums().map { list -> list.map { AlbumSummary(it.name, it.artist, it.songCount) } }
 
+    override fun observeGenres(): Flow<List<GenreSummary>> =
+        dao.observeGenres().map { list -> list.map { GenreSummary(it.name, it.songCount) } }
+
+    override fun observeFolders(): Flow<List<FolderSummary>> =
+        dao.observeFolders().map { list -> list.map { FolderSummary(it.path, it.songCount) } }
+
     override suspend fun scan(): Int = withContext(io) {
         val found = querySongs()
         val existingIds = dao.allIds()
@@ -47,7 +55,8 @@ class LibraryRepositoryImpl @Inject constructor(
     private fun querySongs(): List<SongEntity> {
         val projection = mutableListOf(
             MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ALBUM, MediaStore.Audio.Media.YEAR, MediaStore.Audio.Media.TRACK,
-            MediaStore.Audio.Media.DURATION, MediaStore.Audio.Media.SIZE, MediaStore.Audio.Media.MIME_TYPE, MediaStore.Audio.Media.DATA
+            MediaStore.Audio.Media.DURATION, MediaStore.Audio.Media.SIZE, MediaStore.Audio.Media.MIME_TYPE, MediaStore.Audio.Media.DATA,
+            MediaStore.Audio.Media.DATE_ADDED
         )
         // These columns only exist on API 30+; requesting them earlier throws.
         val hasExtraColumns = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
@@ -74,10 +83,12 @@ class LibraryRepositoryImpl @Inject constructor(
             val iSize = c.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
             val iMime = c.getColumnIndexOrThrow(MediaStore.Audio.Media.MIME_TYPE)
             val iData = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+            val iDateAdded = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
             val iAlbumArtist = if (hasExtraColumns) c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ARTIST) else -1
             val iGenre = if (hasExtraColumns) c.getColumnIndex(MediaStore.Audio.Media.GENRE) else -1
 
             while (c.moveToNext()) {
+                val path = c.getString(iData).orEmpty()
                 songs += SongEntity(
                     mediaStoreId = c.getLong(iId),
                     title = c.getString(iTitle).clean(),
@@ -90,7 +101,9 @@ class LibraryRepositoryImpl @Inject constructor(
                     durationMs = c.getLong(iDuration),
                     sizeBytes = c.getLong(iSize),
                     mimeType = c.getString(iMime).orEmpty(),
-                    path = c.getString(iData).orEmpty()
+                    path = path,
+                    dateAdded = c.getLong(iDateAdded),
+                    folder = path.substringBeforeLast('/', "")
                 )
             }
         }
@@ -113,5 +126,7 @@ internal fun SongEntity.toDomain() = Song(
     durationMs = durationMs,
     sizeBytes = sizeBytes,
     mimeType = mimeType,
-    path = path
+    path = path,
+    dateAdded = dateAdded,
+    folder = folder
 )

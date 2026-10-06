@@ -8,6 +8,10 @@
     <string name="tab_songs">آهنگ‌ها</string>
     <string name="tab_artists">هنرمندان</string>
     <string name="tab_albums">آلبوم‌ها</string>
+    <string name="tab_genres">ژانرها</string>
+    <string name="tab_folders">پوشه‌ها</string>
+    <string name="unknown_genre">ژانر ناشناس</string>
+    <string name="unknown_folder">پوشه ناشناس</string>
     <string name="permission_message">برای اسکن آهنگ‌های دستگاه، دسترسی به موسیقی لازم است.</string>
     <string name="permission_button">اجازه دسترسی به موسیقی</string>
     <string name="action_rescan">اسکن دوباره کتابخانه</string>

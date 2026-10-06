@@ -8,6 +8,10 @@
     <string name="tab_songs">Songs</string>
     <string name="tab_artists">Artists</string>
     <string name="tab_albums">Albums</string>
+    <string name="tab_genres">Genres</string>
+    <string name="tab_folders">Folders</string>
+    <string name="unknown_genre">Unknown genre</string>
+    <string name="unknown_folder">Unknown folder</string>
     <string name="permission_message">Music access is required to scan songs on this device.</string>
     <string name="permission_button">Allow music access</string>
     <string name="action_rescan">Rescan library</string>

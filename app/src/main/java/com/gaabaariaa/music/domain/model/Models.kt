@@ -12,12 +12,24 @@ data class Song(
     val durationMs: Long,
     val sizeBytes: Long,
     val mimeType: String,
-    val path: String
+    val path: String,
+    val dateAdded: Long = 0L,
+    val folder: String = ""
 )
 
 data class ArtistSummary(val name: String, val songCount: Int, val albumCount: Int)
 
 data class AlbumSummary(val name: String, val artist: String, val songCount: Int)
+
+data class GenreSummary(val name: String, val songCount: Int)
+
+data class FolderSummary(val path: String, val songCount: Int)
+
+data class ScanState(
+    val scanning: Boolean = false,
+    val lastCount: Int? = null,
+    val failed: Boolean = false
+)
 
 enum class ThemeMode { SYSTEM, LIGHT, DARK }
 
