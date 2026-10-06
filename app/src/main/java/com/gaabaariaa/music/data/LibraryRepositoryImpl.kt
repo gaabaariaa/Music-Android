@@ -45,38 +45,37 @@ class LibraryRepositoryImpl @Inject constructor(
 
     @Suppress("DEPRECATION")
     private fun querySongs(): List<SongEntity> {
-        val audio = MediaStore.Audio.Media
         val projection = mutableListOf(
-            audio._ID, audio.TITLE, audio.ARTIST, audio.ALBUM, audio.YEAR, audio.TRACK,
-            audio.DURATION, audio.SIZE, audio.MIME_TYPE, audio.DATA
+            MediaStore.Audio.Media._ID, MediaStore.Audio.Media.TITLE, MediaStore.Audio.Media.ARTIST, MediaStore.Audio.Media.ALBUM, MediaStore.Audio.Media.YEAR, MediaStore.Audio.Media.TRACK,
+            MediaStore.Audio.Media.DURATION, MediaStore.Audio.Media.SIZE, MediaStore.Audio.Media.MIME_TYPE, MediaStore.Audio.Media.DATA
         )
         // These columns only exist on API 30+; requesting them earlier throws.
         val hasExtraColumns = Build.VERSION.SDK_INT >= Build.VERSION_CODES.R
         if (hasExtraColumns) {
-            projection += audio.ALBUM_ARTIST
-            projection += audio.GENRE
+            projection += MediaStore.Audio.Media.ALBUM_ARTIST
+            projection += MediaStore.Audio.Media.GENRE
         }
 
         val songs = ArrayList<SongEntity>()
         resolver.query(
-            audio.EXTERNAL_CONTENT_URI,
+            MediaStore.Audio.Media.EXTERNAL_CONTENT_URI,
             projection.toTypedArray(),
-            audio.IS_MUSIC + " != 0",
+            MediaStore.Audio.Media.IS_MUSIC + " != 0",
             null,
-            audio.TITLE + " COLLATE NOCASE ASC"
+            MediaStore.Audio.Media.TITLE + " COLLATE NOCASE ASC"
         )?.use { c ->
-            val iId = c.getColumnIndexOrThrow(audio._ID)
-            val iTitle = c.getColumnIndexOrThrow(audio.TITLE)
-            val iArtist = c.getColumnIndexOrThrow(audio.ARTIST)
-            val iAlbum = c.getColumnIndexOrThrow(audio.ALBUM)
-            val iYear = c.getColumnIndexOrThrow(audio.YEAR)
-            val iTrack = c.getColumnIndexOrThrow(audio.TRACK)
-            val iDuration = c.getColumnIndexOrThrow(audio.DURATION)
-            val iSize = c.getColumnIndexOrThrow(audio.SIZE)
-            val iMime = c.getColumnIndexOrThrow(audio.MIME_TYPE)
-            val iData = c.getColumnIndexOrThrow(audio.DATA)
-            val iAlbumArtist = if (hasExtraColumns) c.getColumnIndex(audio.ALBUM_ARTIST) else -1
-            val iGenre = if (hasExtraColumns) c.getColumnIndex(audio.GENRE) else -1
+            val iId = c.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
+            val iTitle = c.getColumnIndexOrThrow(MediaStore.Audio.Media.TITLE)
+            val iArtist = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ARTIST)
+            val iAlbum = c.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
+            val iYear = c.getColumnIndexOrThrow(MediaStore.Audio.Media.YEAR)
+            val iTrack = c.getColumnIndexOrThrow(MediaStore.Audio.Media.TRACK)
+            val iDuration = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DURATION)
+            val iSize = c.getColumnIndexOrThrow(MediaStore.Audio.Media.SIZE)
+            val iMime = c.getColumnIndexOrThrow(MediaStore.Audio.Media.MIME_TYPE)
+            val iData = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATA)
+            val iAlbumArtist = if (hasExtraColumns) c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ARTIST) else -1
+            val iGenre = if (hasExtraColumns) c.getColumnIndex(MediaStore.Audio.Media.GENRE) else -1
 
             while (c.moveToNext()) {
                 songs += SongEntity(
