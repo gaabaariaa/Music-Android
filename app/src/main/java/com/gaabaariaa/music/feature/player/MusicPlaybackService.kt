@@ -1,4 +1,4 @@
-package com.gaabaariaa.music.player
+package com.gaabaariaa.music.feature.player
 
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -11,7 +11,6 @@ class MusicPlaybackService : MediaSessionService() {
 
     override fun onCreate() {
         super.onCreate()
-
         val player = ExoPlayer.Builder(this)
             .setAudioAttributes(
                 AudioAttributes.Builder()
@@ -22,15 +21,12 @@ class MusicPlaybackService : MediaSessionService() {
             )
             .setHandleAudioBecomingNoisy(true)
             .build()
-
         mediaSession = MediaSession.Builder(this, player)
             .setId("MusicPlaybackSession")
             .build()
     }
 
-    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
-        return mediaSession
-    }
+    override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? = mediaSession
 
     override fun onDestroy() {
         mediaSession?.run {

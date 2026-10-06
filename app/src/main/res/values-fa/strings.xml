@@ -1,0 +1,59 @@
+<resources>
+    <string name="app_name">Musiq</string>
+
+    <string name="nav_library">کتابخانه</string>
+    <string name="nav_settings">تنظیمات</string>
+
+    <string name="library_title">کتابخانه موسیقی</string>
+    <string name="tab_songs">آهنگ‌ها</string>
+    <string name="tab_artists">هنرمندان</string>
+    <string name="tab_albums">آلبوم‌ها</string>
+    <string name="permission_message">برای اسکن آهنگ‌های دستگاه، دسترسی به موسیقی لازم است.</string>
+    <string name="permission_button">اجازه دسترسی به موسیقی</string>
+    <string name="action_rescan">اسکن دوباره کتابخانه</string>
+    <string name="empty_songs">موسیقی‌ای روی دستگاه پیدا نشد.</string>
+    <string name="empty_generic">موردی پیدا نشد.</string>
+    <string name="unknown_title">عنوان ناشناس</string>
+    <string name="unknown_artist">هنرمند ناشناس</string>
+    <string name="unknown_album">آلبوم ناشناس</string>
+    <string name="two_parts">%1$s • %2$s</string>
+    <plurals name="songs_count">
+        <item quantity="one">%d آهنگ</item>
+        <item quantity="other">%d آهنگ</item>
+    </plurals>
+    <plurals name="albums_count">
+        <item quantity="one">%d آلبوم</item>
+        <item quantity="other">%d آلبوم</item>
+    </plurals>
+
+    <string name="now_playing">در حال پخش</string>
+    <string name="back">بازگشت</string>
+    <string name="queue">صف پخش</string>
+    <string name="playing">در حال پخش</string>
+    <string name="previous">قبلی</string>
+    <string name="play">پخش</string>
+    <string name="pause">توقف</string>
+    <string name="next">بعدی</string>
+    <string name="shuffle">پخش تصادفی</string>
+    <string name="repeat_off">تکرار خاموش</string>
+    <string name="repeat_all">تکرار همه</string>
+    <string name="repeat_one">تکرار یک آهنگ</string>
+
+    <string name="settings_title">تنظیمات</string>
+    <string name="settings_appearance">ظاهر</string>
+    <string name="theme_mode">تم</string>
+    <string name="theme_system">سیستم</string>
+    <string name="theme_light">روشن</string>
+    <string name="theme_dark">تیره</string>
+    <string name="dynamic_color">رنگ پویا</string>
+    <string name="dynamic_color_summary">استفاده از رنگ‌های تصویر زمینه</string>
+    <string name="dynamic_color_unsupported">نیازمند اندروید ۱۲ یا بالاتر</string>
+    <string name="amoled">تیره AMOLED</string>
+    <string name="amoled_summary">پس‌زمینه کاملاً مشکی در تم تیره</string>
+    <string name="accent_color">رنگ اصلی</string>
+    <string name="accent_purple">بنفش</string>
+    <string name="accent_blue">آبی</string>
+    <string name="accent_green">سبز</string>
+    <string name="accent_orange">نارنجی</string>
+    <string name="accent_red">قرمز</string>
+</resources>
