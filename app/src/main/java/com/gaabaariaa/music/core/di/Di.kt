@@ -4,10 +4,13 @@ import android.content.ContentResolver
 import android.content.Context
 import androidx.room.Room
 import com.gaabaariaa.music.data.LibraryRepositoryImpl
+import com.gaabaariaa.music.data.local.MIGRATION_1_2
 import com.gaabaariaa.music.data.local.MusicDatabase
 import com.gaabaariaa.music.data.local.SongDao
 import com.gaabaariaa.music.data.settings.DataStoreSettingsRepository
+import com.gaabaariaa.music.data.work.WorkManagerLibraryScanner
 import com.gaabaariaa.music.domain.repository.LibraryRepository
+import com.gaabaariaa.music.domain.repository.LibraryScanner
 import com.gaabaariaa.music.domain.repository.SettingsRepository
 import dagger.Binds
 import dagger.Module
@@ -30,7 +33,9 @@ object AppModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): MusicDatabase =
-        Room.databaseBuilder(context, MusicDatabase::class.java, "music.db").build()
+        Room.databaseBuilder(context, MusicDatabase::class.java, "music.db")
+            .addMigrations(MIGRATION_1_2)
+            .build()
 
     @Provides
     fun provideSongDao(db: MusicDatabase): SongDao = db.songDao()
@@ -49,6 +54,9 @@ object AppModule {
 abstract class BindingsModule {
     @Binds
     abstract fun bindLibraryRepository(impl: LibraryRepositoryImpl): LibraryRepository
+
+    @Binds
+    abstract fun bindLibraryScanner(impl: WorkManagerLibraryScanner): LibraryScanner
 
     @Binds
     abstract fun bindSettingsRepository(impl: DataStoreSettingsRepository): SettingsRepository

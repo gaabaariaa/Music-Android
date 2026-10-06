@@ -2,10 +2,6 @@
 
 package com.gaabaariaa.music.feature.library
 
-import android.Manifest
-import android.content.Context
-import android.content.pm.PackageManager
-import android.os.Build
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -27,7 +23,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
+import androidx.compose.material3.ScrollableTabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -42,14 +38,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gaabaariaa.music.R
+import com.gaabaariaa.music.core.util.audioPermission
 import com.gaabaariaa.music.core.util.formatDuration
+import com.gaabaariaa.music.core.util.hasAudioPermission
 import com.gaabaariaa.music.domain.model.Song
 
-private val tabTitles = listOf(R.string.tab_songs, R.string.tab_artists, R.string.tab_albums)
+private val tabTitles = listOf(
+    R.string.tab_songs, R.string.tab_artists, R.string.tab_albums, R.string.tab_genres, R.string.tab_folders
+)
 
 @Composable
 fun LibraryScreen(
@@ -60,6 +59,8 @@ fun LibraryScreen(
     val songs by viewModel.songs.collectAsStateWithLifecycle()
     val artists by viewModel.artists.collectAsStateWithLifecycle()
     val albums by viewModel.albums.collectAsStateWithLifecycle()
+    val genres by viewModel.genres.collectAsStateWithLifecycle()
+    val folders by viewModel.folders.collectAsStateWithLifecycle()
     val scan by viewModel.scanState.collectAsStateWithLifecycle()
 
     var granted by remember { mutableStateOf(hasAudioPermission(context)) }
@@ -99,7 +100,7 @@ fun LibraryScreen(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) { Text(stringResource(R.string.permission_button)) }
             } else {
-                TabRow(selectedTabIndex = tab) {
+                ScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
                     tabTitles.forEachIndexed { index, title ->
                         Tab(
                             selected = tab == index,
@@ -114,7 +115,9 @@ fun LibraryScreen(
                 when (tab) {
                     0 -> SongList(songs, onPlay)
                     1 -> ArtistList(artists)
-                    else -> AlbumList(albums)
+                    2 -> AlbumList(albums)
+                    3 -> GenreList(genres)
+                    else -> FolderList(folders)
                 }
             }
         }
@@ -207,9 +210,44 @@ private fun AlbumList(albums: List<com.gaabaariaa.music.domain.model.AlbumSummar
     }
 }
 
-private fun audioPermission(): String =
-    if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO
-    else Manifest.permission.READ_EXTERNAL_STORAGE
+@Composable
+private fun GenreList(genres: List<com.gaabaariaa.music.domain.model.GenreSummary>) {
+    if (genres.isEmpty()) {
+        Text(stringResource(R.string.empty_generic), Modifier.padding(16.dp))
+        return
+    }
+    val unknown = stringResource(R.string.unknown_genre)
+    val resources = LocalContext.current.resources
+    LazyColumn {
+        itemsIndexed(genres, key = { _, g -> g.name }) { _, genre ->
+            ListItem(
+                headlineContent = { Text(genre.name.ifBlank { unknown }, maxLines = 1) },
+                supportingContent = {
+                    Text(resources.getQuantityString(R.plurals.songs_count, genre.songCount, genre.songCount))
+                }
+            )
+            HorizontalDivider()
+        }
+    }
+}
 
-private fun hasAudioPermission(context: Context): Boolean =
-    ContextCompat.checkSelfPermission(context, audioPermission()) == PackageManager.PERMISSION_GRANTED
+@Composable
+private fun FolderList(folders: List<com.gaabaariaa.music.domain.model.FolderSummary>) {
+    if (folders.isEmpty()) {
+        Text(stringResource(R.string.empty_generic), Modifier.padding(16.dp))
+        return
+    }
+    val unknown = stringResource(R.string.unknown_folder)
+    val resources = LocalContext.current.resources
+    LazyColumn {
+        itemsIndexed(folders, key = { _, f -> f.path }) { _, folder ->
+            ListItem(
+                headlineContent = { Text(folder.path.ifBlank { unknown }, maxLines = 2) },
+                supportingContent = {
+                    Text(resources.getQuantityString(R.plurals.songs_count, folder.songCount, folder.songCount))
+                }
+            )
+            HorizontalDivider()
+        }
+    }
+}
