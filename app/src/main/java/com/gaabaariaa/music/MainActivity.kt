@@ -23,78 +23,177 @@ import com.gaabaariaa.music.data.SongEntity
 import com.gaabaariaa.music.player.MusicPlayerManager
 import kotlinx.coroutines.*
 
-class MainActivity:ComponentActivity(){
- private lateinit var db:MusicDatabase
- private lateinit var player:MusicPlayerManager
- private val scope=CoroutineScope(SupervisorJob()+Dispatchers.Main.immediate)
- private var permissionGranted by mutableStateOf(false)
- private var scanning by mutableStateOf(false)
- private var scanResult by mutableStateOf("")
- private val permissionLauncher=registerForActivityResult(ActivityResultContracts.RequestPermission()){granted->
-  permissionGranted=granted
-  if(granted)scan()
- }
- override fun onCreate(state:Bundle?){
-  super.onCreate(state)
-  db=Room.databaseBuilder(applicationContext,MusicDatabase::class.java,"music.db").build()
-  player=MusicPlayerManager(this)
-  permissionGranted=hasAudioPermission()
-  setContent{MusicApp(db,player,permissionGranted,scanning,scanResult){requestAudioPermission()}}
-  if(permissionGranted)scan()
- }
- private fun hasAudioPermission()=ContextCompat.checkSelfPermission(this,audioPermission())==PackageManager.PERMISSION_GRANTED
- private fun audioPermission()=if(Build.VERSION.SDK_INT>=33)Manifest.permission.READ_MEDIA_AUDIO else Manifest.permission.READ_EXTERNAL_STORAGE
- private fun requestAudioPermission(){permissionLauncher.launch(audioPermission())}
- private fun scan(){
-  if(scanning)return
-  scanning=true
-  scope.launch(Dispatchers.IO){
-   val count=MusicRepository(contentResolver,db.songDao()).scan()
-   withContext(Dispatchers.Main){scanResult="Library scanned: $count songs";scanning=false}
-  }
- }
- override fun onDestroy(){scope.cancel();player.release();db.close();super.onDestroy()}
+class MainActivity : ComponentActivity() {
+    private lateinit var db: MusicDatabase
+    private lateinit var player: MusicPlayerManager
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var permissionGranted by mutableStateOf(false)
+    private var scanning by mutableStateOf(false)
+    private var scanResult by mutableStateOf("")
+
+    private val permissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        permissionGranted = granted
+        if (granted) scan()
+    }
+
+    override fun onCreate(state: Bundle?) {
+        super.onCreate(state)
+        db = Room.databaseBuilder(applicationContext, MusicDatabase::class.java, "music.db").build()
+        player = MusicPlayerManager(this)
+        permissionGranted = hasAudioPermission()
+        setContent {
+            MusicApp(db, player, permissionGranted, scanning, scanResult) { requestAudioPermission() }
+        }
+        if (permissionGranted) scan()
+    }
+
+    private fun hasAudioPermission() =
+        ContextCompat.checkSelfPermission(this, audioPermission()) == PackageManager.PERMISSION_GRANTED
+
+    private fun audioPermission() =
+        if (Build.VERSION.SDK_INT >= 33) Manifest.permission.READ_MEDIA_AUDIO
+        else Manifest.permission.READ_EXTERNAL_STORAGE
+
+    private fun requestAudioPermission() = permissionLauncher.launch(audioPermission())
+
+    private fun scan() {
+        if (scanning) return
+        scanning = true
+        scope.launch(Dispatchers.IO) {
+            val count = MusicRepository(contentResolver, db.songDao()).scan()
+            withContext(Dispatchers.Main) {
+                scanResult = "Library scanned: $count songs"
+                scanning = false
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        scope.cancel()
+        player.release()
+        db.close()
+        super.onDestroy()
+    }
 }
 
 @OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
-private fun MusicApp(db:MusicDatabase,player:MusicPlayerManager,permission:Boolean,scanning:Boolean,result:String,onPermission:()->Unit){
- val songs by db.songDao().observeSongs().collectAsState(emptyList())
- val artists by db.songDao().observeArtists().collectAsState(emptyList())
- val albums by db.songDao().observeAlbums().collectAsState(emptyList())
- var tab by remember{mutableStateOf(0)}
- MaterialTheme{
-  Scaffold(topBar={TopAppBar(title={Text("Music Library")})}){pad->
-   Column(Modifier.padding(pad).fillMaxSize()){
-    if(!permission){
-     Text("Music access is required to scan songs on this device.",Modifier.padding(16.dp))
-     Button(onClick=onPermission,Modifier.padding(horizontal=16.dp)){Text("Allow music access")}
-    }else{
-     Row(Modifier.fillMaxWidth(),horizontalArrangement=Arrangement.SpaceEvenly){
-      listOf("Songs","Artists","Albums").forEachIndexed{i,label->TextButton(onClick={tab=i}){Text(if(tab==i)"● $label" else label)}}
-     }
-     if(scanning)LinearProgressIndicator(Modifier.fillMaxWidth())
-     if(result.isNotBlank())Text(result,Modifier.padding(16.dp))
-     when(tab){0->SongList(songs){player.play(it)};1->EntityList(artists){it.artist};else->EntityList(albums){it.album}}
+private fun MusicApp(
+    db: MusicDatabase,
+    player: MusicPlayerManager,
+    permission: Boolean,
+    scanning: Boolean,
+    result: String,
+    onPermission: () -> Unit
+) {
+    val songs by db.songDao().observeSongs().collectAsState(emptyList())
+    val artists by db.songDao().observeArtists().collectAsState(emptyList())
+    val albums by db.songDao().observeAlbums().collectAsState(emptyList())
+    var tab by remember { mutableStateOf(0) }
+    val currentTitle by remember(player) {
+        derivedStateOf {
+            player.player.currentMediaItem?.mediaMetadata?.title?.toString().orEmpty()
+        }
     }
-   }
-  }
- }
+    var isPlaying by remember { mutableStateOf(false) }
+
+    DisposableEffect(player) {
+        val listener = object : androidx.media3.common.Player.Listener {
+            override fun onIsPlayingChanged(playing: Boolean) {
+                isPlaying = playing
+            }
+        }
+        player.player.addListener(listener)
+        onDispose { player.player.removeListener(listener) }
+    }
+
+    MaterialTheme {
+        Scaffold(
+            topBar = { TopAppBar(title = { Text("Music Library") }) },
+            bottomBar = {
+                if (currentTitle.isNotBlank()) {
+                    MiniPlayer(
+                        title = currentTitle,
+                        isPlaying = isPlaying,
+                        onPrevious = player::previous,
+                        onPlayPause = player::togglePlayPause,
+                        onNext = player::next
+                    )
+                }
+            }
+        ) { pad ->
+            Column(Modifier.padding(pad).fillMaxSize()) {
+                if (!permission) {
+                    Text("Music access is required to scan songs on this device.", Modifier.padding(16.dp))
+                    Button(onClick = onPermission, Modifier.padding(horizontal = 16.dp)) {
+                        Text("Allow music access")
+                    }
+                } else {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                        listOf("Songs", "Artists", "Albums").forEachIndexed { i, label ->
+                            TextButton(onClick = { tab = i }) {
+                                Text(if (tab == i) "● $label" else label)
+                            }
+                        }
+                    }
+                    if (scanning) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    if (result.isNotBlank()) Text(result, Modifier.padding(16.dp))
+                    when (tab) {
+                        0 -> SongList(songs) { index -> player.setQueue(songs, index) }
+                        1 -> EntityList(artists) { it.artist }
+                        else -> EntityList(albums) { it.album }
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
-private fun SongList(songs:List<SongEntity>,onPlay:(SongEntity)->Unit){
- if(songs.isEmpty())Text("No local music found.",Modifier.padding(16.dp))
- LazyColumn{
-  items(songs,key={it.mediaStoreId}){song->
-   ListItem(headlineContent={Text(song.title)},supportingContent={Text(song.artist+" • "+song.album)},modifier=Modifier.clickable{onPlay(song)})
-   HorizontalDivider()
-  }
- }
+private fun MiniPlayer(
+    title: String,
+    isPlaying: Boolean,
+    onPrevious: () -> Unit,
+    onPlayPause: () -> Unit,
+    onNext: () -> Unit
+) {
+    Surface(tonalElevation = 4.dp) {
+        Row(
+            Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text(title, Modifier.weight(1f).padding(8.dp), maxLines = 1)
+            TextButton(onClick = onPrevious) { Text("Prev") }
+            TextButton(onClick = onPlayPause) { Text(if (isPlaying) "Pause" else "Play") }
+            TextButton(onClick = onNext) { Text("Next") }
+        }
+    }
 }
 
 @Composable
-private fun EntityList(items:List<SongEntity>,label:(SongEntity)->String){
- if(items.isEmpty())Text("Nothing found.",Modifier.padding(16.dp))
- LazyColumn{items(items,key={it.mediaStoreId}){item->ListItem(headlineContent={Text(label(item))})}}
+private fun SongList(songs: List<SongEntity>, onPlay: (Int) -> Unit) {
+    if (songs.isEmpty()) Text("No local music found.", Modifier.padding(16.dp))
+    LazyColumn {
+        items(songs, key = { it.mediaStoreId }) { song ->
+            val index = songs.indexOf(song)
+            ListItem(
+                headlineContent = { Text(song.title) },
+                supportingContent = { Text(song.artist + " • " + song.album) },
+                modifier = Modifier.clickable { onPlay(index) }
+            )
+            HorizontalDivider()
+        }
+    }
+}
+
+@Composable
+private fun EntityList(items: List<SongEntity>, label: (SongEntity) -> String) {
+    if (items.isEmpty()) Text("Nothing found.", Modifier.padding(16.dp))
+    LazyColumn {
+        items(items, key = { it.mediaStoreId }) { item ->
+            ListItem(headlineContent = { Text(label(item)) })
+        }
+    }
 }
