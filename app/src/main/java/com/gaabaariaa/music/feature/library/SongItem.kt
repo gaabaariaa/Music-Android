@@ -10,6 +10,7 @@ import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Row
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -36,7 +37,11 @@ fun SongItem(
     song: Song,
     onClick: () -> Unit,
     onPlayNext: (Song) -> Unit,
-    onAddToQueue: (Song) -> Unit
+    onAddToQueue: (Song) -> Unit,
+    onEditTags: (Song) -> Unit,
+    selectionMode: Boolean = false,
+    selected: Boolean = false,
+    onSelect: (() -> Unit)? = null
 ) {
     var menuOpen by remember { mutableStateOf(false) }
     val context = LocalContext.current
@@ -48,15 +53,25 @@ fun SongItem(
         ListItem(
             headlineContent = { Text(song.title.ifBlank { stringResource(R.string.unknown_title) }, maxLines = 1) },
             supportingContent = { Text(separator.format(artist, album), maxLines = 1) },
+            leadingContent = if (selectionMode) {
+                { Checkbox(checked = selected, onCheckedChange = null) }
+            } else {
+                null
+            },
             trailingContent = {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Text(formatDuration(song.durationMs))
-                    IconButton(onClick = { menuOpen = true }) {
-                        Icon(Icons.Default.MoreVert, stringResource(R.string.more_options))
+                    if (!selectionMode) {
+                        IconButton(onClick = { menuOpen = true }) {
+                            Icon(Icons.Default.MoreVert, stringResource(R.string.more_options))
+                        }
                     }
                 }
             },
-            modifier = Modifier.combinedClickable(onClick = onClick, onLongClick = { menuOpen = true })
+            modifier = Modifier.combinedClickable(
+                onClick = onClick,
+                onLongClick = { if (!selectionMode) menuOpen = true }
+            )
         )
         DropdownMenu(expanded = menuOpen, onDismissRequest = { menuOpen = false }) {
             DropdownMenuItem(
@@ -75,6 +90,22 @@ fun SongItem(
                     Toast.makeText(context, R.string.toast_added_to_queue, Toast.LENGTH_SHORT).show()
                 }
             )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_edit_tags)) },
+                onClick = {
+                    menuOpen = false
+                    onEditTags(song)
+                }
+            )
+            if (onSelect != null) {
+                DropdownMenuItem(
+                    text = { Text(stringResource(R.string.menu_select)) },
+                    onClick = {
+                        menuOpen = false
+                        onSelect()
+                    }
+                )
+            }
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.menu_share)) },
                 onClick = {

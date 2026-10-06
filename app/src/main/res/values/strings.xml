@@ -81,4 +81,36 @@
     <string name="sleep_minutes">%d min</string>
     <string name="sleep_cancel">Turn off timer</string>
     <string name="sleep_remaining">Sleep in %s</string>
+    <string name="menu_edit_tags">Edit tags</string>
+    <string name="menu_select">Select</string>
+    <string name="select_all">Select all</string>
+    <string name="clear_selection">Clear selection</string>
+    <plurals name="selected_count">
+        <item quantity="one">%d selected</item>
+        <item quantity="other">%d selected</item>
+    </plurals>
+    <string name="tags_title">Edit tags</string>
+    <plurals name="tags_title_multi">
+        <item quantity="one">Edit %d song</item>
+        <item quantity="other">Edit %d songs</item>
+    </plurals>
+    <string name="tags_save">Save tags</string>
+    <string name="tags_saved">Tags saved</string>
+    <string name="tags_no_changes">No changes to save.</string>
+    <string name="tags_permission_denied">Permission to modify the files was denied.</string>
+    <string name="tags_failed">%d songs could not be changed. Their original files were restored.</string>
+    <string name="tags_multiple_values">Multiple values</string>
+    <string name="tags_unreadable_all">The tags of these files could not be read.</string>
+    <string name="tags_unreadable_some">%d files could not be read and will be skipped.</string>
+    <string name="field_title">Title</string>
+    <string name="field_artist">Artist</string>
+    <string name="field_album">Album</string>
+    <string name="field_album_artist">Album artist</string>
+    <string name="field_genre">Genre</string>
+    <string name="field_year">Year</string>
+    <string name="field_track">Track number</string>
+    <string name="field_disc">Disc number</string>
+    <string name="field_composer">Composer</string>
+    <string name="field_comment">Comment</string>
+    <string name="field_lyrics">Lyrics</string>
 </resources>

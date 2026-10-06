@@ -2,6 +2,7 @@
 
 package com.gaabaariaa.music.feature.library
 
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
@@ -16,6 +17,9 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Clear
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Button
@@ -69,6 +73,7 @@ fun LibraryScreen(
     onPlayNext: (Song) -> Unit,
     onAddToQueue: (Song) -> Unit,
     onOpenDetail: (DetailType, String) -> Unit,
+    onEditTags: () -> Unit,
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -80,6 +85,8 @@ fun LibraryScreen(
     val scan by viewModel.scanState.collectAsStateWithLifecycle()
     val query by viewModel.query.collectAsStateWithLifecycle()
     val sort by viewModel.sort.collectAsStateWithLifecycle()
+    val selection by viewModel.selection.collectAsStateWithLifecycle()
+    BackHandler(enabled = selection.isNotEmpty()) { viewModel.clearSelection() }
 
     var granted by remember { mutableStateOf(hasAudioPermission(context)) }
     val launcher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {
@@ -91,16 +98,43 @@ fun LibraryScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.library_title)) },
-                actions = {
-                    if (granted) {
-                        IconButton(onClick = { viewModel.scan(force = true) }, enabled = !scan.scanning) {
-                            Icon(Icons.Default.Refresh, stringResource(R.string.action_rescan))
+            if (selection.isNotEmpty()) {
+                TopAppBar(
+                    title = {
+                        Text(LocalContext.current.resources.getQuantityString(
+                            R.plurals.selected_count, selection.size, selection.size
+                        ))
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = viewModel::clearSelection) {
+                            Icon(Icons.Default.Close, stringResource(R.string.clear_selection))
+                        }
+                    },
+                    actions = {
+                        IconButton(onClick = { viewModel.selectAll(songs.map { it.id }) }) {
+                            Icon(Icons.Default.SelectAll, stringResource(R.string.select_all))
+                        }
+                        IconButton(onClick = {
+                            viewModel.startTagEdit(selection.toList())
+                            onEditTags()
+                            viewModel.clearSelection()
+                        }) {
+                            Icon(Icons.Default.Edit, stringResource(R.string.menu_edit_tags))
                         }
                     }
-                }
-            )
+                )
+            } else {
+                TopAppBar(
+                    title = { Text(stringResource(R.string.library_title)) },
+                    actions = {
+                        if (granted) {
+                            IconButton(onClick = { viewModel.scan(force = true) }, enabled = !scan.scanning) {
+                                Icon(Icons.Default.Refresh, stringResource(R.string.action_rescan))
+                            }
+                        }
+                    }
+                )
+            }
         },
         contentWindowInsets = WindowInsets(0.dp)
     ) { pad ->
@@ -130,7 +164,19 @@ fun LibraryScreen(
                             onQuery = viewModel::setQuery,
                             onSort = viewModel::setSort
                         )
-                        SongList(songs, query.isNotBlank(), onPlay, onPlayNext, onAddToQueue)
+                        SongList(
+                            songs = songs,
+                            isSearching = query.isNotBlank(),
+                            selection = selection,
+                            onPlay = onPlay,
+                            onPlayNext = onPlayNext,
+                            onAddToQueue = onAddToQueue,
+                            onEditTags = {
+                                viewModel.startTagEdit(listOf(it.id))
+                                onEditTags()
+                            },
+                            onToggleSelect = viewModel::toggleSelection
+                        )
                     }
                     1 -> ArtistList(artists) { onOpenDetail(DetailType.ARTIST, it) }
                     2 -> AlbumList(albums) { onOpenDetail(DetailType.ALBUM, it) }
@@ -199,9 +245,12 @@ private fun SongSort.label(): Int = when (this) {
 fun SongList(
     songs: List<Song>,
     isSearching: Boolean,
+    selection: Set<Long>,
     onPlay: (List<Song>, Int) -> Unit,
     onPlayNext: (Song) -> Unit,
-    onAddToQueue: (Song) -> Unit
+    onAddToQueue: (Song) -> Unit,
+    onEditTags: (Song) -> Unit,
+    onToggleSelect: (Long) -> Unit
 ) {
     if (songs.isEmpty()) {
         Text(
@@ -212,7 +261,17 @@ fun SongList(
     }
     LazyColumn {
         itemsIndexed(songs, key = { _, song -> song.id }) { index, song ->
-            SongItem(song, onClick = { onPlay(songs, index) }, onPlayNext = onPlayNext, onAddToQueue = onAddToQueue)
+            val selectionMode = selection.isNotEmpty()
+            SongItem(
+                song = song,
+                onClick = { if (selectionMode) onToggleSelect(song.id) else onPlay(songs, index) },
+                onPlayNext = onPlayNext,
+                onAddToQueue = onAddToQueue,
+                onEditTags = onEditTags,
+                selectionMode = selectionMode,
+                selected = song.id in selection,
+                onSelect = { onToggleSelect(song.id) }
+            )
             HorizontalDivider()
         }
     }

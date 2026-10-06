@@ -38,6 +38,7 @@ fun DetailScreen(
     onPlayNext: (Song) -> Unit,
     onAddToQueue: (Song) -> Unit,
     onOpenDetail: (DetailType, String) -> Unit,
+    onEditTags: () -> Unit,
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
@@ -108,7 +109,11 @@ fun DetailScreen(
                     song,
                     onClick = { onPlay(songs, index) },
                     onPlayNext = onPlayNext,
-                    onAddToQueue = onAddToQueue
+                    onAddToQueue = onAddToQueue,
+                    onEditTags = {
+                        viewModel.startTagEdit(listOf(it.id))
+                        onEditTags()
+                    }
                 )
                 HorizontalDivider()
             }

@@ -9,6 +9,9 @@ import com.gaabaariaa.music.domain.model.GenreSummary
 import com.gaabaariaa.music.domain.model.ScanState
 import com.gaabaariaa.music.domain.model.Song
 import com.gaabaariaa.music.domain.model.ThemeMode
+import android.content.IntentSender
+import com.gaabaariaa.music.domain.model.TagValues
+import com.gaabaariaa.music.domain.model.TagWriteResult
 import kotlinx.coroutines.flow.Flow
 
 interface LibraryRepository {
@@ -40,4 +43,20 @@ interface LibraryScanner {
     val state: Flow<ScanState>
     fun scanNow(force: Boolean = false)
     fun schedulePeriodic()
+}
+
+interface TagRepository {
+    /** Reads tags straight from the files. Songs that cannot be read are missing from the result. */
+    suspend fun read(songIds: List<Long>): Map<Long, TagValues>
+
+    fun hasWriteAccess(songIds: List<Long>): Boolean
+
+    /** Android 11+ system dialog asking the user to allow modifying these files; null on older versions. */
+    fun createWriteRequest(songIds: List<Long>): IntentSender?
+
+    /**
+     * Writes only the given fields (an empty value clears the field). Each file is backed up first,
+     * verified after writing, and restored from the backup if anything goes wrong.
+     */
+    suspend fun write(songIds: List<Long>, changes: TagValues): TagWriteResult
 }

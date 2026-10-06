@@ -81,4 +81,36 @@
     <string name="sleep_minutes">%d دقیقه</string>
     <string name="sleep_cancel">خاموش کردن تایمر</string>
     <string name="sleep_remaining">خاموشی تا %s</string>
+    <string name="menu_edit_tags">ویرایش تگ‌ها</string>
+    <string name="menu_select">انتخاب</string>
+    <string name="select_all">انتخاب همه</string>
+    <string name="clear_selection">لغو انتخاب</string>
+    <plurals name="selected_count">
+        <item quantity="one">%d مورد انتخاب شد</item>
+        <item quantity="other">%d مورد انتخاب شد</item>
+    </plurals>
+    <string name="tags_title">ویرایش تگ‌ها</string>
+    <plurals name="tags_title_multi">
+        <item quantity="one">ویرایش %d آهنگ</item>
+        <item quantity="other">ویرایش %d آهنگ</item>
+    </plurals>
+    <string name="tags_save">ذخیره تگ‌ها</string>
+    <string name="tags_saved">تگ‌ها ذخیره شد</string>
+    <string name="tags_no_changes">تغییری برای ذخیره وجود ندارد.</string>
+    <string name="tags_permission_denied">اجازه‌ی تغییر فایل‌ها داده نشد.</string>
+    <string name="tags_failed">تغییر %d آهنگ ممکن نشد. فایل‌های اصلی آن‌ها بازگردانی شد.</string>
+    <string name="tags_multiple_values">مقادیر متفاوت</string>
+    <string name="tags_unreadable_all">تگ‌های این فایل‌ها خوانده نشد.</string>
+    <string name="tags_unreadable_some">%d فایل خوانده نشد و نادیده گرفته می‌شود.</string>
+    <string name="field_title">عنوان</string>
+    <string name="field_artist">هنرمند</string>
+    <string name="field_album">آلبوم</string>
+    <string name="field_album_artist">هنرمند آلبوم</string>
+    <string name="field_genre">ژانر</string>
+    <string name="field_year">سال</string>
+    <string name="field_track">شماره‌ی ترک</string>
+    <string name="field_disc">شماره‌ی دیسک</string>
+    <string name="field_composer">آهنگساز</string>
+    <string name="field_comment">توضیحات</string>
+    <string name="field_lyrics">متن آهنگ</string>
 </resources>

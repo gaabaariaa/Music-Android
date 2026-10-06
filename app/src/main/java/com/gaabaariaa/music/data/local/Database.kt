@@ -84,6 +84,9 @@ interface SongDao {
     )
     fun observeAlbumsByArtist(artist: String): Flow<List<AlbumRow>>
 
+    @Query("SELECT * FROM songs WHERE mediaStoreId = :id")
+    suspend fun getById(id: Long): SongEntity?
+
     @Query("SELECT mediaStoreId FROM songs")
     suspend fun allIds(): List<Long>
 
