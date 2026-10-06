@@ -23,6 +23,7 @@ import com.gaabaariaa.music.data.MusicDatabase
 import com.gaabaariaa.music.data.MusicRepository
 import com.gaabaariaa.music.data.SongEntity
 import com.gaabaariaa.music.player.MusicPlayerManager
+import androidx.media3.common.Player
 import kotlinx.coroutines.*
 
 class MainActivity : ComponentActivity() {
@@ -80,7 +81,6 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(androidx.media3.common.util.UnstableApi::class)
 @Composable
 private fun MusicApp(
     db: MusicDatabase,
@@ -93,39 +93,47 @@ private fun MusicApp(
     val songs by db.songDao().observeSongs().collectAsState(emptyList())
     val artists by db.songDao().observeArtists().collectAsState(emptyList())
     val albums by db.songDao().observeAlbums().collectAsState(emptyList())
+    val controller by player.controller.collectAsState()
     var tab by remember { mutableStateOf(0) }
     var showNowPlaying by remember { mutableStateOf(false) }
-    var isPlaying by remember { mutableStateOf(player.player.isPlaying) }
-    var currentIndex by remember { mutableStateOf(player.player.currentMediaItemIndex) }
-    var currentPosition by remember { mutableStateOf(player.player.currentPosition.coerceAtLeast(0L)) }
-    var duration by remember { mutableStateOf(player.player.duration.coerceAtLeast(0L)) }
+    var isPlaying by remember { mutableStateOf(false) }
+    var currentIndex by remember { mutableStateOf(0) }
+    var currentPosition by remember { mutableStateOf(0L) }
+    var duration by remember { mutableStateOf(0L) }
 
-    DisposableEffect(player) {
-        val listener = object : androidx.media3.common.Player.Listener {
+    DisposableEffect(controller) {
+        val active = controller
+        if (active == null) return@DisposableEffect onDispose { }
+        val listener = object : Player.Listener {
             override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
             override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
-                currentIndex = player.player.currentMediaItemIndex
-                duration = player.player.duration.coerceAtLeast(0L)
+                currentIndex = active.currentMediaItemIndex
+                duration = active.duration.coerceAtLeast(0L)
                 currentPosition = 0L
             }
             override fun onPlaybackStateChanged(playbackState: Int) {
-                duration = player.player.duration.coerceAtLeast(0L)
+                duration = active.duration.coerceAtLeast(0L)
             }
         }
-        player.player.addListener(listener)
-        onDispose { player.player.removeListener(listener) }
+        active.addListener(listener)
+        isPlaying = active.isPlaying
+        currentIndex = active.currentMediaItemIndex
+        duration = active.duration.coerceAtLeast(0L)
+        currentPosition = active.currentPosition.coerceAtLeast(0L)
+        onDispose { active.removeListener(listener) }
     }
 
-    LaunchedEffect(isPlaying, showNowPlaying) {
-        while (showNowPlaying || isPlaying) {
-            currentPosition = player.player.currentPosition.coerceAtLeast(0L)
-            duration = player.player.duration.coerceAtLeast(0L)
+    LaunchedEffect(controller, isPlaying, showNowPlaying) {
+        val active = controller
+        while (active != null && (showNowPlaying || isPlaying)) {
+            currentPosition = active.currentPosition.coerceAtLeast(0L)
+            duration = active.duration.coerceAtLeast(0L)
             delay(500)
         }
     }
 
     val currentSong = songs.getOrNull(currentIndex)
-        ?: player.player.currentMediaItem?.let { item ->
+        ?: controller?.currentMediaItem?.let { item ->
             SongEntity(
                 mediaStoreId = item.mediaId.toLongOrNull() ?: -1L,
                 title = item.mediaMetadata.title?.toString().orEmpty(),
@@ -135,7 +143,7 @@ private fun MusicApp(
                 genre = "",
                 year = 0,
                 track = 0,
-                durationMs = item.mediaMetadata.extras?.getLong("duration", 0L) ?: 0L,
+                durationMs = 0L,
                 sizeBytes = 0L,
                 mimeType = "",
                 path = ""
@@ -155,7 +163,7 @@ private fun MusicApp(
                 onPrevious = player::previous,
                 onPlayPause = player::togglePlayPause,
                 onNext = player::next,
-                onSeek = { player.player.seekTo(it) },
+                onSeek = player::seekTo,
                 onSelect = { index ->
                     player.setQueue(songs, index)
                     currentIndex = index
