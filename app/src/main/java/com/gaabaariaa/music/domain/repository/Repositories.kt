@@ -17,6 +17,11 @@ interface LibraryRepository {
     fun observeAlbums(): Flow<List<AlbumSummary>>
     fun observeGenres(): Flow<List<GenreSummary>>
     fun observeFolders(): Flow<List<FolderSummary>>
+    fun observeSongsByArtist(artist: String): Flow<List<Song>>
+    fun observeSongsByAlbum(album: String): Flow<List<Song>>
+    fun observeSongsByGenre(genre: String): Flow<List<Song>>
+    fun observeSongsByFolder(folder: String): Flow<List<Song>>
+    fun observeAlbumsByArtist(artist: String): Flow<List<AlbumSummary>>
 
     /** Scans MediaStore, updates the database and returns the number of songs found. */
     suspend fun scan(): Int

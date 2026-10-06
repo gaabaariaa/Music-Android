@@ -108,6 +108,14 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch { manager.setQueue(songs, startIndex) }
     }
 
+    fun addToQueue(song: Song) {
+        viewModelScope.launch { manager.addToQueue(song) }
+    }
+
+    fun playNext(song: Song) {
+        viewModelScope.launch { manager.playNext(song) }
+    }
+
     fun togglePlayPause() = manager.togglePlayPause()
     fun next() = manager.next()
     fun previous() = manager.previous()

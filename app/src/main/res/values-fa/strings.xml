@@ -60,4 +60,20 @@
     <string name="accent_green">سبز</string>
     <string name="accent_orange">نارنجی</string>
     <string name="accent_red">قرمز</string>
+    <string name="search_hint">جستجوی آهنگ</string>
+    <string name="clear_search">پاک کردن جستجو</string>
+    <string name="no_results">آهنگی مطابق جستجو پیدا نشد.</string>
+    <string name="sort">مرتب‌سازی</string>
+    <string name="sort_title">عنوان</string>
+    <string name="sort_artist">هنرمند</string>
+    <string name="sort_album">آلبوم</string>
+    <string name="sort_date_added">تازه‌اضافه‌شده</string>
+    <string name="sort_duration">طولانی‌ترین</string>
+    <string name="more_options">گزینه‌های بیشتر</string>
+    <string name="menu_play_next">پخش بعدی</string>
+    <string name="menu_add_to_queue">افزودن به صف</string>
+    <string name="menu_share">اشتراک‌گذاری</string>
+    <string name="toast_play_next">بعد از این آهنگ پخش می‌شود</string>
+    <string name="toast_added_to_queue">به صف اضافه شد</string>
+    <string name="play_all">پخش همه</string>
 </resources>

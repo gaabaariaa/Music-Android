@@ -45,6 +45,24 @@ class MusicPlayerManager @Inject constructor(@ApplicationContext context: Contex
         c.play()
     }
 
+    suspend fun addToQueue(song: Song) {
+        val c = controller.filterNotNull().first()
+        if (c.mediaItemCount == 0) {
+            setQueue(listOf(song), 0)
+        } else {
+            c.addMediaItem(song.toMediaItem())
+        }
+    }
+
+    suspend fun playNext(song: Song) {
+        val c = controller.filterNotNull().first()
+        if (c.mediaItemCount == 0) {
+            setQueue(listOf(song), 0)
+        } else {
+            c.addMediaItem(c.currentMediaItemIndex + 1, song.toMediaItem())
+        }
+    }
+
     fun togglePlayPause() {
         controller.value?.let { if (it.isPlaying) it.pause() else it.play() }
     }
