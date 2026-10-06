@@ -14,6 +14,12 @@ import com.google.common.util.concurrent.MoreExecutors
 import dagger.hilt.android.qualifiers.ApplicationContext
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -25,6 +31,12 @@ import kotlinx.coroutines.flow.first
 class MusicPlayerManager @Inject constructor(@ApplicationContext context: Context) {
     private val _controller = MutableStateFlow<MediaController?>(null)
     val controller: StateFlow<MediaController?> = _controller.asStateFlow()
+
+    // Lives as long as the process, so the sleep timer still fires when the UI is gone.
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main.immediate)
+    private var sleepJob: Job? = null
+    private val _sleepRemainingMs = MutableStateFlow(0L)
+    val sleepRemainingMs: StateFlow<Long> = _sleepRemainingMs.asStateFlow()
 
     init {
         val future = MediaController.Builder(
@@ -61,6 +73,30 @@ class MusicPlayerManager @Inject constructor(@ApplicationContext context: Contex
         } else {
             c.addMediaItem(c.currentMediaItemIndex + 1, song.toMediaItem())
         }
+    }
+
+    fun startSleepTimer(minutes: Int) {
+        sleepJob?.cancel()
+        sleepJob = scope.launch {
+            var left = minutes * 60_000L
+            while (left > 0) {
+                _sleepRemainingMs.value = left
+                delay(1_000)
+                left -= 1_000
+            }
+            controller.value?.pause()
+            _sleepRemainingMs.value = 0L
+        }
+    }
+
+    fun cancelSleepTimer() {
+        sleepJob?.cancel()
+        sleepJob = null
+        _sleepRemainingMs.value = 0L
+    }
+
+    fun setSpeed(speed: Float) {
+        controller.value?.setPlaybackSpeed(speed)
     }
 
     fun togglePlayPause() {

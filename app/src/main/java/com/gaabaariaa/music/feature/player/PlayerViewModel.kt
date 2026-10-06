@@ -27,6 +27,9 @@ data class PlayerUiState(
     val currentIndex: Int = 0,
     val shuffle: Boolean = false,
     val repeatMode: Int = Player.REPEAT_MODE_OFF,
+    val mediaId: String = "",
+    val speed: Float = 1f,
+    val sleepRemainingMs: Long = 0L,
     val queue: List<QueueItem> = emptyList()
 )
 
@@ -60,6 +63,9 @@ class PlayerViewModel @Inject constructor(
             }
         }
         viewModelScope.launch {
+            manager.sleepRemainingMs.collect { left -> _state.update { it.copy(sleepRemainingMs = left) } }
+        }
+        viewModelScope.launch {
             while (true) {
                 val controller = attached
                 if (controller != null && controller.isPlaying) {
@@ -89,6 +95,8 @@ class PlayerViewModel @Inject constructor(
                 currentIndex = player.currentMediaItemIndex,
                 shuffle = player.shuffleModeEnabled,
                 repeatMode = player.repeatMode,
+                mediaId = item?.mediaId.orEmpty(),
+                speed = player.playbackParameters.speed,
                 queue = if (rebuildQueue) buildQueue(player) else old.queue
             )
         }
@@ -116,6 +124,9 @@ class PlayerViewModel @Inject constructor(
         viewModelScope.launch { manager.playNext(song) }
     }
 
+    fun startSleepTimer(minutes: Int) = manager.startSleepTimer(minutes)
+    fun cancelSleepTimer() = manager.cancelSleepTimer()
+    fun setSpeed(speed: Float) = manager.setSpeed(speed)
     fun togglePlayPause() = manager.togglePlayPause()
     fun next() = manager.next()
     fun previous() = manager.previous()
