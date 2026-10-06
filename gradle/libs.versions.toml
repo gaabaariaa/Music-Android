@@ -16,7 +16,7 @@ media3 = "1.5.1"
 junit = "4.13.2"
 work = "2.10.0"
 hiltWork = "1.2.0"
-taglib = "1.0.5"
+taglib = "1.0.1"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
