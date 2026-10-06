@@ -76,4 +76,9 @@
     <string name="toast_play_next">Will play next</string>
     <string name="toast_added_to_queue">Added to queue</string>
     <string name="play_all">Play all</string>
+    <string name="playback_speed">Playback speed</string>
+    <string name="sleep_timer">Sleep timer</string>
+    <string name="sleep_minutes">%d min</string>
+    <string name="sleep_cancel">Turn off timer</string>
+    <string name="sleep_remaining">Sleep in %s</string>
 </resources>

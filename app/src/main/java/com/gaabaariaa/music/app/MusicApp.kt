@@ -1,5 +1,10 @@
 package com.gaabaariaa.music.app
 
+import android.Manifest
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
@@ -12,7 +17,13 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.core.content.ContextCompat
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
@@ -57,6 +68,20 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val inNowPlaying = destination?.route == Routes.NOW_PLAYING
+
+    // Android 13+: ask for notification permission once, when playback first starts.
+    val context = LocalContext.current
+    val notificationLauncher = rememberLauncherForActivityResult(ActivityResultContracts.RequestPermission()) {}
+    var askedNotifications by rememberSaveable { mutableStateOf(false) }
+    LaunchedEffect(player.hasMedia) {
+        if (player.hasMedia && !askedNotifications && Build.VERSION.SDK_INT >= 33 &&
+            ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) !=
+            PackageManager.PERMISSION_GRANTED
+        ) {
+            askedNotifications = true
+            notificationLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
 
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
@@ -135,7 +160,10 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onSeek = playerViewModel::seekTo,
                     onSelect = playerViewModel::playQueueIndex,
                     onShuffle = playerViewModel::toggleShuffle,
-                    onRepeat = playerViewModel::cycleRepeat
+                    onRepeat = playerViewModel::cycleRepeat,
+                    onSpeed = playerViewModel::setSpeed,
+                    onSleepTimer = playerViewModel::startSleepTimer,
+                    onCancelSleepTimer = playerViewModel::cancelSleepTimer
                 )
             }
         }

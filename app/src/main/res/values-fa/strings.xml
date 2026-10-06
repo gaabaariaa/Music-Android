@@ -76,4 +76,9 @@
     <string name="toast_play_next">بعد از این آهنگ پخش می‌شود</string>
     <string name="toast_added_to_queue">به صف اضافه شد</string>
     <string name="play_all">پخش همه</string>
+    <string name="playback_speed">سرعت پخش</string>
+    <string name="sleep_timer">تایمر خواب</string>
+    <string name="sleep_minutes">%d دقیقه</string>
+    <string name="sleep_cancel">خاموش کردن تایمر</string>
+    <string name="sleep_remaining">خاموشی تا %s</string>
 </resources>
