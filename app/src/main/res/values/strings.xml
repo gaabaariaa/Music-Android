@@ -113,4 +113,19 @@
     <string name="field_composer">Composer</string>
     <string name="field_comment">Comment</string>
     <string name="field_lyrics">Lyrics</string>
+    <string name="menu_find_artwork">Find artwork</string>
+    <string name="artwork_title">Artwork</string>
+    <string name="artwork_search">Search covers</string>
+    <string name="artwork_embed">Embed in file</string>
+    <string name="artwork_save_pictures">Save to Pictures</string>
+    <string name="artwork_remove">Remove embedded artwork</string>
+    <string name="artwork_embedded">Artwork embedded</string>
+    <string name="artwork_removed">Artwork removed</string>
+    <string name="artwork_saved_pictures">Saved to Pictures/Musiq</string>
+    <string name="artwork_save_failed">Could not save the image (needs Android 10 or newer).</string>
+    <string name="artwork_download_failed">Could not download the cover.</string>
+    <string name="artwork_offline">No internet connection. Artwork search needs a connection.</string>
+    <string name="artwork_server_error">The artwork service is not responding. Try again later.</string>
+    <string name="artwork_no_results">No covers found. Try a different album or artist name.</string>
+    <string name="artwork_attribution">Release data from MusicBrainz, images from the Cover Art Archive.</string>
 </resources>

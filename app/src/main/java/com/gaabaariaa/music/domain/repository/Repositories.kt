@@ -3,6 +3,7 @@ package com.gaabaariaa.music.domain.repository
 import com.gaabaariaa.music.domain.model.Accent
 import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.AppSettings
+import com.gaabaariaa.music.domain.model.ArtworkSearchResult
 import com.gaabaariaa.music.domain.model.ArtistSummary
 import com.gaabaariaa.music.domain.model.FolderSummary
 import com.gaabaariaa.music.domain.model.GenreSummary
@@ -59,4 +60,20 @@ interface TagRepository {
      * verified after writing, and restored from the backup if anything goes wrong.
      */
     suspend fun write(songIds: List<Long>, changes: TagValues): TagWriteResult
+}
+
+interface ArtworkRepository {
+    /** Looks up releases on MusicBrainz. Needs a connection; reports OFFLINE otherwise. */
+    suspend fun search(title: String, artist: String, album: String): ArtworkSearchResult
+
+    /** Cover Art Archive image (250 or 500 px) for a release, or null if it has none. Cached in memory. */
+    suspend fun fetchImage(releaseId: String, sizePx: Int): ByteArray?
+
+    /** Replaces the embedded pictures of the songs with this image (JPEG or PNG). */
+    suspend fun embed(songIds: List<Long>, image: ByteArray): TagWriteResult
+
+    suspend fun removeEmbedded(songIds: List<Long>): TagWriteResult
+
+    /** Saves the image as a normal picture in Pictures/Musiq. Android 10+ only. */
+    suspend fun saveToPictures(image: ByteArray, name: String): Boolean
 }

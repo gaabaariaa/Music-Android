@@ -39,6 +39,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gaabaariaa.music.R
+import com.gaabaariaa.music.feature.artwork.ArtworkScreen
 import com.gaabaariaa.music.feature.library.DETAIL_ROUTE
 import com.gaabaariaa.music.feature.library.DetailScreen
 import com.gaabaariaa.music.feature.library.LibraryScreen
@@ -54,6 +55,7 @@ private object Routes {
     const val SETTINGS = "settings"
     const val NOW_PLAYING = "now_playing"
     const val TAGS = "tags"
+    const val ARTWORK = "artwork"
 }
 
 private data class TopLevelDestination(val route: String, val label: Int, val icon: ImageVector)
@@ -70,7 +72,7 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val inNowPlaying = destination?.route == Routes.NOW_PLAYING
-    val hideBottomBar = inNowPlaying || destination?.route == Routes.TAGS
+    val hideBottomBar = inNowPlaying || destination?.route == Routes.TAGS || destination?.route == Routes.ARTWORK
 
     // Android 13+: ask for notification permission once, when playback first starts.
     val context = LocalContext.current
@@ -135,7 +137,8 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onPlayNext = playerViewModel::playNext,
                     onAddToQueue = playerViewModel::addToQueue,
                     onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
-                    onEditTags = { navController.navigate(Routes.TAGS) }
+                    onEditTags = { navController.navigate(Routes.TAGS) },
+                    onFindArtwork = { navController.navigate(Routes.ARTWORK) }
                 )
             }
             composable(
@@ -151,10 +154,12 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onPlayNext = playerViewModel::playNext,
                     onAddToQueue = playerViewModel::addToQueue,
                     onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
-                    onEditTags = { navController.navigate(Routes.TAGS) }
+                    onEditTags = { navController.navigate(Routes.TAGS) },
+                    onFindArtwork = { navController.navigate(Routes.ARTWORK) }
                 )
             }
             composable(Routes.SETTINGS) { SettingsScreen() }
+            composable(Routes.ARTWORK) { ArtworkScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.TAGS) { TagEditorScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.NOW_PLAYING) {
                 NowPlayingScreen(
