@@ -10,7 +10,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -78,7 +78,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
-@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
+@OptIn(androidx.media3.common.util.UnstableApi::class, androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 private fun MusicApp(
     db: MusicDatabase,
@@ -92,31 +92,85 @@ private fun MusicApp(
     val artists by db.songDao().observeArtists().collectAsState(emptyList())
     val albums by db.songDao().observeAlbums().collectAsState(emptyList())
     var tab by remember { mutableStateOf(0) }
-    val currentTitle by remember(player) {
-        derivedStateOf {
-            player.player.currentMediaItem?.mediaMetadata?.title?.toString().orEmpty()
-        }
-    }
-    var isPlaying by remember { mutableStateOf(false) }
+    var showNowPlaying by remember { mutableStateOf(false) }
+    var isPlaying by remember { mutableStateOf(player.player.isPlaying) }
+    var currentIndex by remember { mutableStateOf(player.player.currentMediaItemIndex) }
+    var currentPosition by remember { mutableStateOf(player.player.currentPosition.coerceAtLeast(0L)) }
+    var duration by remember { mutableStateOf(player.player.duration.coerceAtLeast(0L)) }
 
     DisposableEffect(player) {
         val listener = object : androidx.media3.common.Player.Listener {
-            override fun onIsPlayingChanged(playing: Boolean) {
-                isPlaying = playing
+            override fun onIsPlayingChanged(playing: Boolean) { isPlaying = playing }
+            override fun onMediaItemTransition(mediaItem: androidx.media3.common.MediaItem?, reason: Int) {
+                currentIndex = player.player.currentMediaItemIndex
+                duration = player.player.duration.coerceAtLeast(0L)
+                currentPosition = 0L
+            }
+            override fun onPlaybackStateChanged(playbackState: Int) {
+                duration = player.player.duration.coerceAtLeast(0L)
             }
         }
         player.player.addListener(listener)
         onDispose { player.player.removeListener(listener) }
     }
 
+    LaunchedEffect(isPlaying, showNowPlaying) {
+        while (showNowPlaying || isPlaying) {
+            currentPosition = player.player.currentPosition.coerceAtLeast(0L)
+            duration = player.player.duration.coerceAtLeast(0L)
+            delay(500)
+        }
+    }
+
+    val currentSong = songs.getOrNull(currentIndex)
+        ?: player.player.currentMediaItem?.let { item ->
+            SongEntity(
+                mediaStoreId = item.mediaId.toLongOrNull() ?: -1L,
+                title = item.mediaMetadata.title?.toString().orEmpty(),
+                artist = item.mediaMetadata.artist?.toString().orEmpty(),
+                album = item.mediaMetadata.albumTitle?.toString().orEmpty(),
+                albumArtist = "",
+                genre = "",
+                year = 0,
+                track = 0,
+                durationMs = item.mediaMetadata.extras?.getLong("duration", 0L) ?: 0L,
+                sizeBytes = 0L,
+                mimeType = "",
+                path = ""
+            )
+        }
+
     MaterialTheme {
+        if (showNowPlaying && currentSong != null) {
+            NowPlayingScreen(
+                song = currentSong,
+                queue = songs,
+                currentIndex = currentIndex,
+                isPlaying = isPlaying,
+                positionMs = currentPosition,
+                durationMs = duration,
+                onBack = { showNowPlaying = false },
+                onPrevious = player::previous,
+                onPlayPause = player::togglePlayPause,
+                onNext = player::next,
+                onSeek = { player.player.seekTo(it) },
+                onSelect = { index ->
+                    player.setQueue(songs, index)
+                    currentIndex = index
+                }
+            )
+            return@MaterialTheme
+        }
+
         Scaffold(
             topBar = { TopAppBar(title = { Text("Music Library") }) },
             bottomBar = {
-                if (currentTitle.isNotBlank()) {
+                if (currentSong != null) {
                     MiniPlayer(
-                        title = currentTitle,
+                        title = currentSong.title,
+                        artist = currentSong.artist,
                         isPlaying = isPlaying,
+                        onOpen = { showNowPlaying = true },
                         onPrevious = player::previous,
                         onPlayPause = player::togglePlayPause,
                         onNext = player::next
@@ -154,17 +208,22 @@ private fun MusicApp(
 @Composable
 private fun MiniPlayer(
     title: String,
+    artist: String,
     isPlaying: Boolean,
+    onOpen: () -> Unit,
     onPrevious: () -> Unit,
     onPlayPause: () -> Unit,
     onNext: () -> Unit
 ) {
-    Surface(tonalElevation = 4.dp) {
+    Surface(tonalElevation = 4.dp, modifier = Modifier.clickable(onClick = onOpen)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Text(title, Modifier.weight(1f).padding(8.dp), maxLines = 1)
+            Column(Modifier.weight(1f).padding(8.dp)) {
+                Text(title, maxLines = 1)
+                Text(artist, maxLines = 1, style = MaterialTheme.typography.bodySmall)
+            }
             TextButton(onClick = onPrevious) { Text("Prev") }
             TextButton(onClick = onPlayPause) { Text(if (isPlaying) "Pause" else "Play") }
             TextButton(onClick = onNext) { Text("Next") }
@@ -173,11 +232,83 @@ private fun MiniPlayer(
 }
 
 @Composable
+private fun NowPlayingScreen(
+    song: SongEntity,
+    queue: List<SongEntity>,
+    currentIndex: Int,
+    isPlaying: Boolean,
+    positionMs: Long,
+    durationMs: Long,
+    onBack: () -> Unit,
+    onPrevious: () -> Unit,
+    onPlayPause: () -> Unit,
+    onNext: () -> Unit,
+    onSeek: (Long) -> Unit,
+    onSelect: (Int) -> Unit
+) {
+    var sliderPosition by remember(positionMs) { mutableFloatStateOf(positionMs.toFloat()) }
+    val max = durationMs.coerceAtLeast(1L).toFloat()
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Now Playing") },
+                navigationIcon = { TextButton(onClick = onBack) { Text("Back") } }
+            )
+        }
+    ) { pad ->
+        Column(Modifier.padding(pad).fillMaxSize().padding(20.dp)) {
+            Spacer(Modifier.height(32.dp))
+            Text(song.title, style = MaterialTheme.typography.headlineMedium)
+            Text(song.artist, style = MaterialTheme.typography.titleMedium)
+            Text(song.album, style = MaterialTheme.typography.bodyMedium)
+            Spacer(Modifier.height(28.dp))
+
+            Slider(
+                value = sliderPosition.coerceIn(0f, max),
+                onValueChange = { sliderPosition = it },
+                onValueChangeFinished = { onSeek(sliderPosition.toLong()) },
+                valueRange = 0f..max
+            )
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text(formatTime(positionMs))
+                Text(formatTime(durationMs))
+            }
+
+            Spacer(Modifier.height(16.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                TextButton(onClick = onPrevious) { Text("Previous") }
+                Button(onClick = onPlayPause) { Text(if (isPlaying) "Pause" else "Play") }
+                TextButton(onClick = onNext) { Text("Next") }
+            }
+
+            Spacer(Modifier.height(24.dp))
+            Text("Queue", style = MaterialTheme.typography.titleLarge)
+            LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
+                itemsIndexed(queue, key = { _, item -> item.mediaStoreId }) { index, item ->
+                    ListItem(
+                        headlineContent = { Text(item.title) },
+                        supportingContent = { Text(item.artist + " • " + item.album) },
+                        trailingContent = { if (index == currentIndex) Text("Playing") },
+                        modifier = Modifier.clickable { onSelect(index) }
+                    )
+                    HorizontalDivider()
+                }
+            }
+        }
+    }
+}
+
+private fun formatTime(ms: Long): String {
+    val totalSeconds = (ms / 1000).coerceAtLeast(0)
+    return "%d:%02d".format(totalSeconds / 60, totalSeconds % 60)
+}
+
+@Composable
 private fun SongList(songs: List<SongEntity>, onPlay: (Int) -> Unit) {
     if (songs.isEmpty()) Text("No local music found.", Modifier.padding(16.dp))
     LazyColumn {
-        items(songs, key = { it.mediaStoreId }) { song ->
-            val index = songs.indexOf(song)
+        itemsIndexed(songs, key = { _, song -> song.mediaStoreId }) { index, song ->
             ListItem(
                 headlineContent = { Text(song.title) },
                 supportingContent = { Text(song.artist + " • " + song.album) },
@@ -192,7 +323,7 @@ private fun SongList(songs: List<SongEntity>, onPlay: (Int) -> Unit) {
 private fun EntityList(items: List<SongEntity>, label: (SongEntity) -> String) {
     if (items.isEmpty()) Text("Nothing found.", Modifier.padding(16.dp))
     LazyColumn {
-        items(items, key = { it.mediaStoreId }) { item ->
+        itemsIndexed(items, key = { _, item -> item.mediaStoreId }) { _, item ->
             ListItem(headlineContent = { Text(label(item)) })
         }
     }
