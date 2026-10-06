@@ -1,1 +1,3 @@
-<resources><style name="Theme.Music" parent="android:style/Theme.Material.Light.NoActionBar"/></resources>
+<resources>
+    <style name="Theme.Music" parent="android:Theme.Material.Light.NoActionBar" />
+</resources>
