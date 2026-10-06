@@ -40,6 +40,7 @@ fun DetailScreen(
     onOpenDetail: (DetailType, String) -> Unit,
     onEditTags: () -> Unit,
     onFindArtwork: () -> Unit,
+    onOpenLyrics: (Long) -> Unit,
     viewModel: DetailViewModel = hiltViewModel()
 ) {
     val songs by viewModel.songs.collectAsStateWithLifecycle()
@@ -118,7 +119,8 @@ fun DetailScreen(
                     onFindArtwork = {
                         viewModel.startTagEdit(listOf(it.id))
                         onFindArtwork()
-                    }
+                    },
+                    onFindLyrics = { onOpenLyrics(it.id) }
                 )
                 HorizontalDivider()
             }

@@ -4,16 +4,20 @@ import android.content.ContentResolver
 import android.content.Context
 import androidx.room.Room
 import com.gaabaariaa.music.data.LibraryRepositoryImpl
+import com.gaabaariaa.music.data.local.LyricsDao
 import com.gaabaariaa.music.data.local.MIGRATION_1_2
+import com.gaabaariaa.music.data.local.MIGRATION_2_3
 import com.gaabaariaa.music.data.local.MusicDatabase
 import com.gaabaariaa.music.data.local.SongDao
 import com.gaabaariaa.music.data.settings.DataStoreSettingsRepository
 import com.gaabaariaa.music.data.artwork.ArtworkRepositoryImpl
+import com.gaabaariaa.music.data.lyrics.LyricsRepositoryImpl
 import com.gaabaariaa.music.data.tags.TaglibTagRepository
 import com.gaabaariaa.music.data.work.WorkManagerLibraryScanner
 import com.gaabaariaa.music.domain.repository.ArtworkRepository
 import com.gaabaariaa.music.domain.repository.LibraryRepository
 import com.gaabaariaa.music.domain.repository.LibraryScanner
+import com.gaabaariaa.music.domain.repository.LyricsRepository
 import com.gaabaariaa.music.domain.repository.SettingsRepository
 import com.gaabaariaa.music.domain.repository.TagRepository
 import dagger.Binds
@@ -38,11 +42,14 @@ object AppModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): MusicDatabase =
         Room.databaseBuilder(context, MusicDatabase::class.java, "music.db")
-            .addMigrations(MIGRATION_1_2)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
             .build()
 
     @Provides
     fun provideSongDao(db: MusicDatabase): SongDao = db.songDao()
+
+    @Provides
+    fun provideLyricsDao(db: MusicDatabase): LyricsDao = db.lyricsDao()
 
     @Provides
     fun provideContentResolver(@ApplicationContext context: Context): ContentResolver =
@@ -64,6 +71,9 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindArtworkRepository(impl: ArtworkRepositoryImpl): ArtworkRepository
+
+    @Binds
+    abstract fun bindLyricsRepository(impl: LyricsRepositoryImpl): LyricsRepository
 
     @Binds
     abstract fun bindTagRepository(impl: TaglibTagRepository): TagRepository

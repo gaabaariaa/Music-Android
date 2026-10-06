@@ -76,6 +76,7 @@ fun LibraryScreen(
     onOpenDetail: (DetailType, String) -> Unit,
     onEditTags: () -> Unit,
     onFindArtwork: () -> Unit,
+    onOpenLyrics: (Long) -> Unit,
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -188,6 +189,7 @@ fun LibraryScreen(
                                 viewModel.startTagEdit(listOf(it.id))
                                 onFindArtwork()
                             },
+                            onFindLyrics = { onOpenLyrics(it.id) },
                             onToggleSelect = viewModel::toggleSelection
                         )
                     }
@@ -264,6 +266,7 @@ fun SongList(
     onAddToQueue: (Song) -> Unit,
     onEditTags: (Song) -> Unit,
     onFindArtwork: (Song) -> Unit,
+    onFindLyrics: (Song) -> Unit,
     onToggleSelect: (Long) -> Unit
 ) {
     if (songs.isEmpty()) {
@@ -283,6 +286,7 @@ fun SongList(
                 onAddToQueue = onAddToQueue,
                 onEditTags = onEditTags,
                 onFindArtwork = onFindArtwork,
+                onFindLyrics = onFindLyrics,
                 selectionMode = selectionMode,
                 selected = song.id in selection,
                 onSelect = { onToggleSelect(song.id) }

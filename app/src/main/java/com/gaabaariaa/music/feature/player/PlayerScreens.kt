@@ -42,11 +42,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -58,6 +62,7 @@ import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import com.gaabaariaa.music.R
 import com.gaabaariaa.music.core.util.formatDuration
+import com.gaabaariaa.music.feature.lyrics.LyricsPane
 
 private val speedOptions = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f)
 private val sleepOptions = listOf(15, 30, 45, 60)
@@ -117,7 +122,8 @@ fun NowPlayingScreen(
     onRepeat: () -> Unit,
     onSpeed: (Float) -> Unit,
     onSleepTimer: (Int) -> Unit,
-    onCancelSleepTimer: () -> Unit
+    onCancelSleepTimer: () -> Unit,
+    onOpenLyrics: (Long) -> Unit
 ) {
     // Two panes on tablets and phones in landscape.
     val wide = LocalConfiguration.current.screenWidthDp >= 600
@@ -143,7 +149,7 @@ fun NowPlayingScreen(
                     )
                 }
                 Spacer(Modifier.size(20.dp))
-                Column(Modifier.weight(1f)) { QueuePane(state, onSelect) }
+                Column(Modifier.weight(1f)) { QueueAndLyricsPane(state, onSelect, onSeek, onOpenLyrics) }
             }
         } else {
             Column(Modifier.padding(pad).fillMaxSize().padding(horizontal = 20.dp)) {
@@ -151,7 +157,7 @@ fun NowPlayingScreen(
                     state, 220.dp, onPrevious, onPlayPause, onNext, onSeek, onShuffle, onRepeat,
                     onSpeed, onSleepTimer, onCancelSleepTimer
                 )
-                QueuePane(state, onSelect)
+                QueueAndLyricsPane(state, onSelect, onSeek, onOpenLyrics)
             }
         }
     }
@@ -307,17 +313,37 @@ private fun SleepTimerButton(remainingMs: Long, onStart: (Int) -> Unit, onCancel
 }
 
 @Composable
+private fun ColumnScope.QueueAndLyricsPane(
+    state: PlayerUiState,
+    onSelect: (Int) -> Unit,
+    onSeek: (Long) -> Unit,
+    onOpenLyrics: (Long) -> Unit
+) {
+    var tab by rememberSaveable { mutableIntStateOf(0) }
+    TabRow(selectedTabIndex = tab) {
+        Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.queue)) })
+        Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.lyrics_title)) })
+    }
+    if (tab == 0) {
+        QueuePane(state, onSelect)
+    } else {
+        LyricsPane(
+            mediaId = state.mediaId,
+            positionMs = state.positionMs,
+            onSeek = onSeek,
+            onOpenEditor = onOpenLyrics,
+            modifier = Modifier.weight(1f)
+        )
+    }
+}
+
+@Composable
 private fun ColumnScope.QueuePane(state: PlayerUiState, onSelect: (Int) -> Unit) {
     val unknownTitle = stringResource(R.string.unknown_title)
     val unknownArtist = stringResource(R.string.unknown_artist)
     val unknownAlbum = stringResource(R.string.unknown_album)
     val separator = stringResource(R.string.two_parts)
 
-    Text(
-        stringResource(R.string.queue),
-        style = MaterialTheme.typography.titleLarge,
-        modifier = Modifier.padding(vertical = 8.dp)
-    )
     LazyColumn(Modifier.fillMaxWidth().weight(1f)) {
         itemsIndexed(state.queue) { index, item ->
             ListItem(
