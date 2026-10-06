@@ -4,6 +4,8 @@ import com.gaabaariaa.music.domain.model.Accent
 import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.AppSettings
 import com.gaabaariaa.music.domain.model.ArtworkSearchResult
+import com.gaabaariaa.music.domain.model.Lyrics
+import com.gaabaariaa.music.domain.model.OnlineLyricsResult
 import com.gaabaariaa.music.domain.model.ArtistSummary
 import com.gaabaariaa.music.domain.model.FolderSummary
 import com.gaabaariaa.music.domain.model.GenreSummary
@@ -21,6 +23,7 @@ interface LibraryRepository {
     fun observeAlbums(): Flow<List<AlbumSummary>>
     fun observeGenres(): Flow<List<GenreSummary>>
     fun observeFolders(): Flow<List<FolderSummary>>
+    suspend fun getSong(id: Long): Song?
     fun observeSongsByArtist(artist: String): Flow<List<Song>>
     fun observeSongsByAlbum(album: String): Flow<List<Song>>
     fun observeSongsByGenre(genre: String): Flow<List<Song>>
@@ -76,4 +79,21 @@ interface ArtworkRepository {
 
     /** Saves the image as a normal picture in Pictures/Musiq. Android 10+ only. */
     suspend fun saveToPictures(image: ByteArray, name: String): Boolean
+}
+
+interface LyricsRepository {
+    /** Saved lyrics if there are any, otherwise the lyrics embedded in the file, otherwise null. */
+    fun observe(songId: Long): Flow<Lyrics?>
+
+    suspend fun get(songId: Long): Lyrics?
+
+    /** Stores lyrics in the library database (blank content removes them). */
+    suspend fun save(songId: Long, content: String, source: String)
+
+    suspend fun delete(songId: Long)
+
+    /** Reads a text file chosen by the user (UTF-8, UTF-16 or Windows-1256). */
+    suspend fun readText(uri: String): String?
+
+    suspend fun fetchOnline(title: String, artist: String, album: String, durationMs: Long): OnlineLyricsResult
 }

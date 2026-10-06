@@ -40,6 +40,7 @@ fun SongItem(
     onAddToQueue: (Song) -> Unit,
     onEditTags: (Song) -> Unit,
     onFindArtwork: (Song) -> Unit,
+    onFindLyrics: (Song) -> Unit,
     selectionMode: Boolean = false,
     selected: Boolean = false,
     onSelect: (() -> Unit)? = null
@@ -103,6 +104,13 @@ fun SongItem(
                 onClick = {
                     menuOpen = false
                     onFindArtwork(song)
+                }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.menu_find_lyrics)) },
+                onClick = {
+                    menuOpen = false
+                    onFindLyrics(song)
                 }
             )
             if (onSelect != null) {

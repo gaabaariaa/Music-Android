@@ -97,9 +97,30 @@ interface SongDao {
     suspend fun deleteByIds(ids: List<Long>)
 }
 
-@Database(entities = [SongEntity::class], version = 2, exportSchema = false)
+@Entity(tableName = "lyrics")
+data class LyricsEntity(
+    @PrimaryKey val songId: Long,
+    val content: String,
+    val synced: Boolean,
+    val source: String
+)
+
+@Dao
+interface LyricsDao {
+    @Query("SELECT * FROM lyrics WHERE songId = :songId")
+    fun observe(songId: Long): Flow<LyricsEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsert(entity: LyricsEntity)
+
+    @Query("DELETE FROM lyrics WHERE songId = :songId")
+    suspend fun delete(songId: Long)
+}
+
+@Database(entities = [SongEntity::class, LyricsEntity::class], version = 3, exportSchema = false)
 abstract class MusicDatabase : RoomDatabase() {
     abstract fun songDao(): SongDao
+    abstract fun lyricsDao(): LyricsDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -112,5 +133,15 @@ val MIGRATION_1_2 = object : Migration(1, 2) {
         db.execSQL("CREATE INDEX IF NOT EXISTS index_songs_folder ON songs(folder)")
         // Force the next scan to repopulate the new columns.
         db.execSQL("DELETE FROM songs")
+    }
+}
+
+val MIGRATION_2_3 = object : Migration(2, 3) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS lyrics (" +
+                "songId INTEGER NOT NULL, content TEXT NOT NULL, synced INTEGER NOT NULL, " +
+                "source TEXT NOT NULL, PRIMARY KEY(songId))"
+        )
     }
 }

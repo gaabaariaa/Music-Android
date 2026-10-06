@@ -44,6 +44,7 @@ import com.gaabaariaa.music.feature.library.DETAIL_ROUTE
 import com.gaabaariaa.music.feature.library.DetailScreen
 import com.gaabaariaa.music.feature.library.LibraryScreen
 import com.gaabaariaa.music.feature.library.detailRoute
+import com.gaabaariaa.music.feature.lyrics.LyricsScreen
 import com.gaabaariaa.music.feature.player.MiniPlayer
 import com.gaabaariaa.music.feature.player.NowPlayingScreen
 import com.gaabaariaa.music.feature.player.PlayerViewModel
@@ -56,6 +57,7 @@ private object Routes {
     const val NOW_PLAYING = "now_playing"
     const val TAGS = "tags"
     const val ARTWORK = "artwork"
+    const val LYRICS = "lyrics/{songId}"
 }
 
 private data class TopLevelDestination(val route: String, val label: Int, val icon: ImageVector)
@@ -72,7 +74,8 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
     val backStackEntry by navController.currentBackStackEntryAsState()
     val destination = backStackEntry?.destination
     val inNowPlaying = destination?.route == Routes.NOW_PLAYING
-    val hideBottomBar = inNowPlaying || destination?.route == Routes.TAGS || destination?.route == Routes.ARTWORK
+    val hideBottomBar = inNowPlaying || destination?.route == Routes.TAGS || destination?.route == Routes.ARTWORK ||
+        destination?.route == Routes.LYRICS
 
     // Android 13+: ask for notification permission once, when playback first starts.
     val context = LocalContext.current
@@ -138,7 +141,8 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onAddToQueue = playerViewModel::addToQueue,
                     onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
                     onEditTags = { navController.navigate(Routes.TAGS) },
-                    onFindArtwork = { navController.navigate(Routes.ARTWORK) }
+                    onFindArtwork = { navController.navigate(Routes.ARTWORK) },
+                    onOpenLyrics = { id -> navController.navigate("lyrics/$id") }
                 )
             }
             composable(
@@ -155,10 +159,15 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onAddToQueue = playerViewModel::addToQueue,
                     onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
                     onEditTags = { navController.navigate(Routes.TAGS) },
-                    onFindArtwork = { navController.navigate(Routes.ARTWORK) }
+                    onFindArtwork = { navController.navigate(Routes.ARTWORK) },
+                    onOpenLyrics = { id -> navController.navigate("lyrics/$id") }
                 )
             }
             composable(Routes.SETTINGS) { SettingsScreen() }
+            composable(
+                route = Routes.LYRICS,
+                arguments = listOf(navArgument("songId") { type = NavType.LongType })
+            ) { LyricsScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.ARTWORK) { ArtworkScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.TAGS) { TagEditorScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.NOW_PLAYING) {
@@ -174,7 +183,8 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onRepeat = playerViewModel::cycleRepeat,
                     onSpeed = playerViewModel::setSpeed,
                     onSleepTimer = playerViewModel::startSleepTimer,
-                    onCancelSleepTimer = playerViewModel::cancelSleepTimer
+                    onCancelSleepTimer = playerViewModel::cancelSleepTimer,
+                    onOpenLyrics = { id -> navController.navigate("lyrics/$id") }
                 )
             }
         }

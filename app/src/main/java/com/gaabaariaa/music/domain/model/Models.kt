@@ -55,3 +55,19 @@ data class ArtworkCandidate(val releaseId: String, val title: String, val artist
 enum class ArtworkError { OFFLINE, SERVER }
 
 data class ArtworkSearchResult(val candidates: List<ArtworkCandidate>, val error: ArtworkError? = null)
+
+data class Lyrics(val content: String, val synced: Boolean, val source: String)
+
+sealed interface OnlineLyricsResult {
+    data class Found(val lyrics: Lyrics) : OnlineLyricsResult
+    data object NotFound : OnlineLyricsResult
+    data object Offline : OnlineLyricsResult
+    data object Error : OnlineLyricsResult
+}
+
+object LyricsSource {
+    const val LOCAL = "local"
+    const val EMBEDDED = "embedded"
+    const val ONLINE = "online"
+    const val IMPORTED = "imported"
+}
