@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.gaabaariaa.music"
-    compileSdk = 35
+    compileSdk = 36
 
     defaultConfig {
         applicationId = "com.gaabaariaa.music"

@@ -1,8 +1,8 @@
 [versions]
-agp = "8.7.3"
+agp = "8.9.3"
 kotlin = "2.0.21"
 ksp = "2.0.21-1.0.28"
-hilt = "2.52"
+hilt = "2.56.2"
 composeBom = "2024.12.01"
 coreKtx = "1.15.0"
 activityCompose = "1.10.0"
@@ -16,7 +16,7 @@ media3 = "1.5.1"
 junit = "4.13.2"
 work = "2.10.0"
 hiltWork = "1.2.0"
-taglib = "1.0.0-alpha25"
+taglib = "1.0.5"
 
 [libraries]
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
@@ -43,7 +43,7 @@ kotlinx-coroutines-test = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-t
 androidx-work-runtime-ktx = { module = "androidx.work:work-runtime-ktx", version.ref = "work" }
 androidx-hilt-work = { module = "androidx.hilt:hilt-work", version.ref = "hiltWork" }
 androidx-hilt-compiler = { module = "androidx.hilt:hilt-compiler", version.ref = "hiltWork" }
-taglib = { module = "io.github.kyant0:taglib", version.ref = "taglib" }
+taglib = "1.0.5"
 junit = { module = "junit:junit", version.ref = "junit" }
 
 [plugins]
