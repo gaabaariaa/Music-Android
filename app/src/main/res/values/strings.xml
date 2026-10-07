@@ -218,7 +218,7 @@
     <string name="dl_error_insecure">Only secure (https) links are allowed.</string>
     <string name="dl_error_unknown">The download failed.</string>
     <string name="source_search_title">Find free music</string>
-    <string name="source_legal_notice">Only freely licensed, public-domain or artist-permitted music is offered here. Always follow each track's license, for example by crediting the artist.</string>
+    <string name="source_legal_notice">Only freely licensed, public-domain or artist-permitted music is offered here. Always follow each license of each track, for example by crediting the artist.</string>
     <string name="source_all">All sources</string>
     <string name="source_direct">Direct link</string>
     <string name="source_feed">RSS / podcast feed</string>
