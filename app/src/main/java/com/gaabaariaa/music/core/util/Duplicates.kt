@@ -56,10 +56,9 @@ fun findDuplicateGroups(songs: List<Song>): List<List<Song>> {
 
 /** The line of the lyrics that contains the query, shortened for display. */
 fun lyricSnippet(content: String, query: String, maxLength: Int = 80): String {
-    val line = content.lineSequence()
-        .map { it.replace(Regex("^(\\[[^\\]]*])+"), "").trim() }
-        .firstOrNull { it.contains(query.trim(), ignoreCase = true) }
-        ?: content.trim().lineSequence().first()
+    val stamp = Regex("^(\\[[^\\]]*])+")
+    val lines = content.lineSequence().map { it.replace(stamp, "").trim() }.filter { it.isNotEmpty() }.toList()
+    val line = lines.firstOrNull { it.contains(query.trim(), ignoreCase = true) } ?: lines.firstOrNull().orEmpty()
     return if (line.length <= maxLength) line else line.take(maxLength - 1) + "…"
 }
 
