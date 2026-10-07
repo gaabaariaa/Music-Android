@@ -35,25 +35,25 @@ interface InsightsDao {
     suspend fun searchSongs(q: String, limit: Int): List<SongEntity>
 
     @Query(
-        "SELECT artist AS name, COUNT(*) AS songCount, COUNT(DISTINCT album) AS albumCount FROM songs " +
+        "SELECT artist AS name, COUNT(*) AS songCount, COUNT(DISTINCT album) AS albumCount, MIN(mediaStoreId) AS coverSongId FROM songs " +
             "WHERE artist != '' AND artist LIKE :q ESCAPE '\\' GROUP BY artist ORDER BY artist COLLATE NOCASE LIMIT 30"
     )
     suspend fun searchArtists(q: String): List<ArtistRow>
 
     @Query(
-        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount FROM songs " +
+        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount, MIN(mediaStoreId) AS coverSongId FROM songs " +
             "WHERE album != '' AND album LIKE :q ESCAPE '\\' GROUP BY album ORDER BY album COLLATE NOCASE LIMIT 30"
     )
     suspend fun searchAlbums(q: String): List<AlbumRow>
 
     @Query(
-        "SELECT genre AS name, COUNT(*) AS songCount FROM songs " +
+        "SELECT genre AS name, COUNT(*) AS songCount, MIN(mediaStoreId) AS coverSongId FROM songs " +
             "WHERE genre != '' AND genre LIKE :q ESCAPE '\\' GROUP BY genre ORDER BY genre COLLATE NOCASE LIMIT 30"
     )
     suspend fun searchGenres(q: String): List<GenreRow>
 
     @Query(
-        "SELECT folder AS path, COUNT(*) AS songCount FROM songs " +
+        "SELECT folder AS path, COUNT(*) AS songCount, MIN(mediaStoreId) AS coverSongId FROM songs " +
             "WHERE folder != '' AND folder LIKE :q ESCAPE '\\' GROUP BY folder ORDER BY folder COLLATE NOCASE LIMIT 30"
     )
     suspend fun searchFolders(q: String): List<FolderRow>

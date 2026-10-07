@@ -56,6 +56,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gaabaariaa.music.R
+import com.gaabaariaa.music.core.designsystem.LocalAppSettings
+import com.gaabaariaa.music.domain.model.LibraryLayout
+import com.gaabaariaa.music.domain.model.LibraryTab
 import com.gaabaariaa.music.core.util.audioPermission
 import com.gaabaariaa.music.core.util.hasAudioPermission
 import com.gaabaariaa.music.domain.model.AlbumSummary
@@ -65,9 +68,13 @@ import com.gaabaariaa.music.domain.model.GenreSummary
 import com.gaabaariaa.music.domain.model.Song
 import com.gaabaariaa.music.domain.model.SongSort
 
-private val tabTitles = listOf(
-    R.string.tab_songs, R.string.tab_artists, R.string.tab_albums, R.string.tab_genres, R.string.tab_folders
-)
+private fun LibraryTab.titleRes(): Int = when (this) {
+    LibraryTab.SONGS -> R.string.tab_songs
+    LibraryTab.ARTISTS -> R.string.tab_artists
+    LibraryTab.ALBUMS -> R.string.tab_albums
+    LibraryTab.GENRES -> R.string.tab_genres
+    LibraryTab.FOLDERS -> R.string.tab_folders
+}
 
 @Composable
 fun LibraryScreen(
@@ -161,18 +168,21 @@ fun LibraryScreen(
                     modifier = Modifier.padding(horizontal = 16.dp)
                 ) { Text(stringResource(R.string.permission_button)) }
             } else {
-                ScrollableTabRow(selectedTabIndex = tab, edgePadding = 0.dp) {
-                    tabTitles.forEachIndexed { index, title ->
+                val appSettings = LocalAppSettings.current
+                val tabs = appSettings.libraryTabs
+                val tabIndex = tab.coerceIn(0, tabs.lastIndex)
+                ScrollableTabRow(selectedTabIndex = tabIndex, edgePadding = 0.dp) {
+                    tabs.forEachIndexed { index, item ->
                         Tab(
-                            selected = tab == index,
+                            selected = tabIndex == index,
                             onClick = { tab = index },
-                            text = { Text(stringResource(title)) }
+                            text = { Text(stringResource(item.titleRes())) }
                         )
                     }
                 }
                 if (scan.scanning) LinearProgressIndicator(Modifier.fillMaxWidth())
-                when (tab) {
-                    0 -> {
+                when (tabs[tabIndex]) {
+                    LibraryTab.SONGS -> {
                         SearchAndSortBar(
                             query = query,
                             sort = sort,
@@ -198,10 +208,10 @@ fun LibraryScreen(
                             onToggleSelect = viewModel::toggleSelection
                         )
                     }
-                    1 -> ArtistList(artists) { onOpenDetail(DetailType.ARTIST, it) }
-                    2 -> AlbumList(albums) { onOpenDetail(DetailType.ALBUM, it) }
-                    3 -> GenreList(genres) { onOpenDetail(DetailType.GENRE, it) }
-                    else -> FolderList(folders) { onOpenDetail(DetailType.FOLDER, it) }
+                    LibraryTab.ARTISTS -> SummaryCollection(artistItems(artists)) { onOpenDetail(DetailType.ARTIST, it) }
+                    LibraryTab.ALBUMS -> SummaryCollection(albumItemsUi(albums)) { onOpenDetail(DetailType.ALBUM, it) }
+                    LibraryTab.GENRES -> SummaryCollection(genreItems(genres)) { onOpenDetail(DetailType.GENRE, it) }
+                    LibraryTab.FOLDERS -> SummaryCollection(folderItems(folders)) { onOpenDetail(DetailType.FOLDER, it) }
                 }
             }
         }
@@ -281,6 +291,22 @@ fun SongList(
         )
         return
     }
+    val settings = LocalAppSettings.current
+    if (settings.libraryLayout == LibraryLayout.GRID) {
+        SongGrid(
+            songs = songs,
+            columns = settings.gridColumns,
+            selection = selection,
+            onPlay = onPlay,
+            onPlayNext = onPlayNext,
+            onAddToQueue = onAddToQueue,
+            onEditTags = onEditTags,
+            onFindArtwork = onFindArtwork,
+            onFindLyrics = onFindLyrics,
+            onToggleSelect = onToggleSelect
+        )
+        return
+    }
     LazyColumn {
         itemsIndexed(songs, key = { _, song -> song.id }) { index, song ->
             val selectionMode = selection.isNotEmpty()
@@ -302,30 +328,71 @@ fun SongList(
 }
 
 @Composable
-private fun ArtistList(artists: List<ArtistSummary>, onOpen: (String) -> Unit) {
-    if (artists.isEmpty()) {
-        Text(stringResource(R.string.empty_generic), Modifier.padding(16.dp))
-        return
-    }
+private fun artistItems(artists: List<ArtistSummary>): List<SummaryUi> {
     val unknown = stringResource(R.string.unknown_artist)
     val separator = stringResource(R.string.two_parts)
     val resources = LocalContext.current.resources
-    LazyColumn {
-        itemsIndexed(artists, key = { _, a -> a.name }) { _, artist ->
-            ListItem(
-                headlineContent = { Text(artist.name.ifBlank { unknown }, maxLines = 1) },
-                supportingContent = {
-                    Text(
-                        separator.format(
-                            resources.getQuantityString(R.plurals.songs_count, artist.songCount, artist.songCount),
-                            resources.getQuantityString(R.plurals.albums_count, artist.albumCount, artist.albumCount)
-                        )
-                    )
-                },
-                modifier = Modifier.clickable { onOpen(artist.name) }
-            )
-            HorizontalDivider()
-        }
+    return artists.map {
+        SummaryUi(
+            key = "artist:" + it.name,
+            title = it.name.ifBlank { unknown },
+            subtitle = separator.format(
+                resources.getQuantityString(R.plurals.songs_count, it.songCount, it.songCount),
+                resources.getQuantityString(R.plurals.albums_count, it.albumCount, it.albumCount)
+            ),
+            coverSongId = it.coverSongId,
+            value = it.name
+        )
+    }
+}
+
+@Composable
+private fun albumItemsUi(albums: List<AlbumSummary>): List<SummaryUi> {
+    val unknownAlbum = stringResource(R.string.unknown_album)
+    val unknownArtist = stringResource(R.string.unknown_artist)
+    val separator = stringResource(R.string.two_parts)
+    val resources = LocalContext.current.resources
+    return albums.map {
+        SummaryUi(
+            key = "album:" + it.name,
+            title = it.name.ifBlank { unknownAlbum },
+            subtitle = separator.format(
+                it.artist.ifBlank { unknownArtist },
+                resources.getQuantityString(R.plurals.songs_count, it.songCount, it.songCount)
+            ),
+            coverSongId = it.coverSongId,
+            value = it.name
+        )
+    }
+}
+
+@Composable
+private fun genreItems(genres: List<GenreSummary>): List<SummaryUi> {
+    val unknown = stringResource(R.string.unknown_genre)
+    val resources = LocalContext.current.resources
+    return genres.map {
+        SummaryUi(
+            key = "genre:" + it.name,
+            title = it.name.ifBlank { unknown },
+            subtitle = resources.getQuantityString(R.plurals.songs_count, it.songCount, it.songCount),
+            coverSongId = it.coverSongId,
+            value = it.name
+        )
+    }
+}
+
+@Composable
+private fun folderItems(folders: List<FolderSummary>): List<SummaryUi> {
+    val unknown = stringResource(R.string.unknown_folder)
+    val resources = LocalContext.current.resources
+    return folders.map {
+        SummaryUi(
+            key = "folder:" + it.path,
+            title = it.path.ifBlank { unknown },
+            subtitle = resources.getQuantityString(R.plurals.songs_count, it.songCount, it.songCount),
+            coverSongId = it.coverSongId,
+            value = it.path
+        )
     }
 }
 
@@ -360,49 +427,5 @@ fun androidx.compose.foundation.lazy.LazyListScope.albumItems(
             modifier = Modifier.clickable { onOpen(album.name) }
         )
         HorizontalDivider()
-    }
-}
-
-@Composable
-private fun GenreList(genres: List<GenreSummary>, onOpen: (String) -> Unit) {
-    if (genres.isEmpty()) {
-        Text(stringResource(R.string.empty_generic), Modifier.padding(16.dp))
-        return
-    }
-    val unknown = stringResource(R.string.unknown_genre)
-    val resources = LocalContext.current.resources
-    LazyColumn {
-        itemsIndexed(genres, key = { _, g -> g.name }) { _, genre ->
-            ListItem(
-                headlineContent = { Text(genre.name.ifBlank { unknown }, maxLines = 1) },
-                supportingContent = {
-                    Text(resources.getQuantityString(R.plurals.songs_count, genre.songCount, genre.songCount))
-                },
-                modifier = Modifier.clickable { onOpen(genre.name) }
-            )
-            HorizontalDivider()
-        }
-    }
-}
-
-@Composable
-private fun FolderList(folders: List<FolderSummary>, onOpen: (String) -> Unit) {
-    if (folders.isEmpty()) {
-        Text(stringResource(R.string.empty_generic), Modifier.padding(16.dp))
-        return
-    }
-    val unknown = stringResource(R.string.unknown_folder)
-    val resources = LocalContext.current.resources
-    LazyColumn {
-        itemsIndexed(folders, key = { _, f -> f.path }) { _, folder ->
-            ListItem(
-                headlineContent = { Text(folder.path.ifBlank { unknown }, maxLines = 2) },
-                supportingContent = {
-                    Text(resources.getQuantityString(R.plurals.songs_count, folder.songCount, folder.songCount))
-                },
-                modifier = Modifier.clickable { onOpen(folder.path) }
-            )
-            HorizontalDivider()
-        }
     }
 }

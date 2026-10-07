@@ -11,12 +11,15 @@ import com.gaabaariaa.music.data.local.InsightsDao
 import com.gaabaariaa.music.data.local.MIGRATION_2_3
 import com.gaabaariaa.music.data.local.MIGRATION_3_4
 import com.gaabaariaa.music.data.local.MIGRATION_4_5
+import com.gaabaariaa.music.data.local.MIGRATION_5_6
+import com.gaabaariaa.music.data.local.PersonalDao
 import com.gaabaariaa.music.data.local.MusicDatabase
 import com.gaabaariaa.music.data.local.SongDao
 import com.gaabaariaa.music.data.settings.DataStoreSettingsRepository
 import com.gaabaariaa.music.data.artwork.ArtworkRepositoryImpl
 import com.gaabaariaa.music.data.downloads.DownloadRepositoryImpl
 import com.gaabaariaa.music.data.insights.HealthRepositoryImpl
+import com.gaabaariaa.music.data.personal.PersonalRepositoryImpl
 import com.gaabaariaa.music.data.insights.SearchRepositoryImpl
 import com.gaabaariaa.music.data.lyrics.LyricsRepositoryImpl
 import com.gaabaariaa.music.data.sources.MusicSourceRepositoryImpl
@@ -31,6 +34,7 @@ import com.gaabaariaa.music.domain.repository.LibraryRepository
 import com.gaabaariaa.music.domain.repository.LibraryScanner
 import com.gaabaariaa.music.domain.repository.LyricsRepository
 import com.gaabaariaa.music.domain.repository.MusicSourceRepository
+import com.gaabaariaa.music.domain.repository.PersonalRepository
 import com.gaabaariaa.music.domain.repository.SearchRepository
 import com.gaabaariaa.music.domain.repository.SettingsRepository
 import com.gaabaariaa.music.domain.repository.TagRepository
@@ -56,11 +60,14 @@ object AppModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): MusicDatabase =
         Room.databaseBuilder(context, MusicDatabase::class.java, "music.db")
-            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5)
+            .addMigrations(MIGRATION_1_2, MIGRATION_2_3, MIGRATION_3_4, MIGRATION_4_5, MIGRATION_5_6)
             .build()
 
     @Provides
     fun provideSongDao(db: MusicDatabase): SongDao = db.songDao()
+
+    @Provides
+    fun providePersonalDao(db: MusicDatabase): PersonalDao = db.personalDao()
 
     @Provides
     fun provideDownloadDao(db: MusicDatabase): DownloadDao = db.downloadDao()
@@ -100,6 +107,9 @@ abstract class BindingsModule {
 
     @Binds
     abstract fun bindDownloadRepository(impl: DownloadRepositoryImpl): DownloadRepository
+
+    @Binds
+    abstract fun bindPersonalRepository(impl: PersonalRepositoryImpl): PersonalRepository
 
     @Binds
     abstract fun bindSearchRepository(impl: SearchRepositoryImpl): SearchRepository

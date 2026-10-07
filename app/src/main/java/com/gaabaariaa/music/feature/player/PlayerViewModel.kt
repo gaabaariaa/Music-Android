@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.media3.common.Player
 import androidx.media3.session.MediaController
 import com.gaabaariaa.music.domain.model.Song
+import com.gaabaariaa.music.domain.repository.PersonalRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.delay
@@ -35,8 +36,12 @@ data class PlayerUiState(
 
 @HiltViewModel
 class PlayerViewModel @Inject constructor(
-    private val manager: MusicPlayerManager
+    private val manager: MusicPlayerManager,
+    private val personal: PersonalRepository
 ) : ViewModel() {
+
+    /** Media id that already counted as a play in the current pass; reset when the song restarts. */
+    private var countedMediaId: String? = null
 
     private val _state = MutableStateFlow(PlayerUiState())
     val state: StateFlow<PlayerUiState> = _state.asStateFlow()
@@ -69,15 +74,27 @@ class PlayerViewModel @Inject constructor(
             while (true) {
                 val controller = attached
                 if (controller != null && controller.isPlaying) {
-                    _state.update {
-                        it.copy(
-                            positionMs = controller.currentPosition.coerceAtLeast(0L),
-                            durationMs = controller.duration.coerceAtLeast(0L)
-                        )
-                    }
+                    val position = controller.currentPosition.coerceAtLeast(0L)
+                    val duration = controller.duration.coerceAtLeast(0L)
+                    _state.update { it.copy(positionMs = position, durationMs = duration) }
+                    countPlayIfNeeded(controller.currentMediaItem?.mediaId, position, duration)
                 }
                 delay(500)
             }
+        }
+    }
+
+    /** A song counts as played after 30 seconds, or half of a shorter song. */
+    private fun countPlayIfNeeded(mediaId: String?, position: Long, duration: Long) {
+        val id = mediaId?.toLongOrNull() ?: return
+        if (countedMediaId == mediaId) {
+            if (position < 3_000L) countedMediaId = null // repeated or restarted
+            return
+        }
+        val threshold = if (duration > 0) minOf(30_000L, duration / 2) else 30_000L
+        if (position >= threshold) {
+            countedMediaId = mediaId
+            viewModelScope.launch { personal.recordPlay(id) }
         }
     }
 

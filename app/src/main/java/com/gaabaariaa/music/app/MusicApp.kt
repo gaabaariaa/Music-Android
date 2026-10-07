@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Download
+import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -19,6 +20,11 @@ import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,10 +47,15 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gaabaariaa.music.R
+import com.gaabaariaa.music.core.designsystem.LocalAppSettings
 import com.gaabaariaa.music.feature.artwork.ArtworkScreen
 import com.gaabaariaa.music.feature.downloads.DownloadsScreen
 import com.gaabaariaa.music.feature.downloads.SourceSearchScreen
 import com.gaabaariaa.music.feature.health.DuplicatesScreen
+import com.gaabaariaa.music.feature.home.HomeScreen
+import com.gaabaariaa.music.feature.library.FavoritesState
+import com.gaabaariaa.music.feature.library.FavoritesViewModel
+import com.gaabaariaa.music.feature.library.LocalFavorites
 import com.gaabaariaa.music.feature.health.HealthScreen
 import com.gaabaariaa.music.feature.library.DETAIL_ROUTE
 import com.gaabaariaa.music.feature.library.DetailScreen
@@ -59,6 +70,7 @@ import com.gaabaariaa.music.feature.settings.SettingsScreen
 import com.gaabaariaa.music.feature.tags.TagEditorScreen
 
 private object Routes {
+    const val HOME = "home"
     const val LIBRARY = "library"
     const val SEARCH = "search"
     const val DOWNLOADS = "downloads"
@@ -75,6 +87,7 @@ private object Routes {
 private data class TopLevelDestination(val route: String, val label: Int, val icon: ImageVector)
 
 private val topLevelDestinations = listOf(
+    TopLevelDestination(Routes.HOME, R.string.nav_home, Icons.Default.Home),
     TopLevelDestination(Routes.LIBRARY, R.string.nav_library, Icons.Default.LibraryMusic),
     TopLevelDestination(Routes.SEARCH, R.string.nav_search, Icons.Default.Search),
     TopLevelDestination(Routes.DOWNLOADS, R.string.nav_downloads, Icons.Default.Download),
@@ -82,7 +95,12 @@ private val topLevelDestinations = listOf(
 )
 
 @Composable
-fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
+fun MusicApp(
+    playerViewModel: PlayerViewModel = hiltViewModel(),
+    favoritesViewModel: FavoritesViewModel = hiltViewModel()
+) {
+    val settings = LocalAppSettings.current
+    val favoriteIds by favoritesViewModel.ids.collectAsStateWithLifecycle()
     val navController = rememberNavController()
     val player by playerViewModel.state.collectAsStateWithLifecycle()
     val backStackEntry by navController.currentBackStackEntryAsState()
@@ -105,12 +123,13 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
         }
     }
 
+    CompositionLocalProvider(LocalFavorites provides FavoritesState(favoriteIds, favoritesViewModel::toggle)) {
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {
             if (!hideBottomBar) {
                 Column {
-                    if (player.hasMedia) {
+                    if (player.hasMedia && settings.miniPlayerEnabled) {
                         MiniPlayer(
                             state = player,
                             onOpen = {
@@ -145,9 +164,20 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
     ) { padding ->
         NavHost(
             navController = navController,
-            startDestination = Routes.LIBRARY,
-            modifier = Modifier.padding(bottom = padding.calculateBottomPadding())
+            startDestination = Routes.HOME,
+            modifier = Modifier.padding(bottom = padding.calculateBottomPadding()),
+            enterTransition = { if (settings.animationsEnabled) fadeIn() else EnterTransition.None },
+            exitTransition = { if (settings.animationsEnabled) fadeOut() else ExitTransition.None },
+            popEnterTransition = { if (settings.animationsEnabled) fadeIn() else EnterTransition.None },
+            popExitTransition = { if (settings.animationsEnabled) fadeOut() else ExitTransition.None }
         ) {
+            composable(Routes.HOME) {
+                HomeScreen(
+                    onPlay = playerViewModel::playQueue,
+                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
+                    onOpenHealth = { navController.navigate(Routes.HEALTH) }
+                )
+            }
             composable(Routes.LIBRARY) {
                 LibraryScreen(
                     onPlay = playerViewModel::playQueue,
@@ -229,5 +259,6 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                 )
             }
         }
+    }
     }
 }
