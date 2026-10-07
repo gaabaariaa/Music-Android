@@ -32,6 +32,8 @@ class DataStoreSettingsRepository @Inject constructor(
         val DYNAMIC = booleanPreferencesKey("dynamic_color")
         val AMOLED = booleanPreferencesKey("amoled")
         val ACCENT = stringPreferencesKey("accent")
+        val WIFI_ONLY = booleanPreferencesKey("download_wifi_only")
+        val JAMENDO = stringPreferencesKey("jamendo_client_id")
     }
 
     override val settings: Flow<AppSettings> = context.settingsDataStore.data
@@ -42,7 +44,9 @@ class DataStoreSettingsRepository @Inject constructor(
                 themeMode = p[Keys.THEME].toEnum(defaults.themeMode),
                 dynamicColor = p[Keys.DYNAMIC] ?: defaults.dynamicColor,
                 amoled = p[Keys.AMOLED] ?: defaults.amoled,
-                accent = p[Keys.ACCENT].toEnum(defaults.accent)
+                accent = p[Keys.ACCENT].toEnum(defaults.accent),
+                downloadWifiOnly = p[Keys.WIFI_ONLY] ?: defaults.downloadWifiOnly,
+                jamendoClientId = p[Keys.JAMENDO] ?: defaults.jamendoClientId
             )
         }
 
@@ -56,6 +60,14 @@ class DataStoreSettingsRepository @Inject constructor(
 
     override suspend fun setAmoled(enabled: Boolean) {
         context.settingsDataStore.edit { it[Keys.AMOLED] = enabled }
+    }
+
+    override suspend fun setDownloadWifiOnly(enabled: Boolean) {
+        context.settingsDataStore.edit { it[Keys.WIFI_ONLY] = enabled }
+    }
+
+    override suspend fun setJamendoClientId(id: String) {
+        context.settingsDataStore.edit { it[Keys.JAMENDO] = id.trim() }
     }
 
     override suspend fun setAccent(accent: Accent) {
