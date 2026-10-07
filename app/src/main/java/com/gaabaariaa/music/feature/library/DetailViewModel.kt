@@ -5,6 +5,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.Song
+import com.gaabaariaa.music.domain.model.HealthIssue
+import com.gaabaariaa.music.domain.repository.HealthRepository
 import com.gaabaariaa.music.domain.repository.LibraryRepository
 import com.gaabaariaa.music.feature.tags.TagEditSession
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -18,6 +20,7 @@ import kotlinx.coroutines.flow.stateIn
 class DetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     repository: LibraryRepository,
+    health: HealthRepository,
     private val tagSession: TagEditSession
 ) : ViewModel() {
 
@@ -29,6 +32,7 @@ class DetailViewModel @Inject constructor(
         DetailType.ALBUM -> repository.observeSongsByAlbum(value)
         DetailType.GENRE -> repository.observeSongsByGenre(value)
         DetailType.FOLDER -> repository.observeSongsByFolder(value)
+        DetailType.ISSUE -> health.observeSongs(HealthIssue.valueOf(value))
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     val albums: StateFlow<List<AlbumSummary>> = when (type) {

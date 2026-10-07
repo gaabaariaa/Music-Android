@@ -1,6 +1,8 @@
 package com.gaabaariaa.music.data
 
 import android.content.ContentResolver
+import android.content.ContentUris
+import android.content.IntentSender
 import android.os.Build
 import android.provider.MediaStore
 import com.gaabaariaa.music.core.di.IoDispatcher
@@ -43,6 +45,32 @@ class LibraryRepositoryImpl @Inject constructor(
 
     override suspend fun getSong(id: Long): Song? = dao.getById(id)?.toDomain()
 
+    override fun createDeleteRequest(songIds: List<Long>): IntentSender? {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) return null
+        val uris = songIds.map { ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, it) }
+        return MediaStore.createDeleteRequest(resolver, uris).intentSender
+    }
+
+    override suspend fun deleteDirect(songIds: List<Long>): Int = withContext(io) {
+        var deleted = 0
+        for (id in songIds) {
+            try {
+                val uri = ContentUris.withAppendedId(MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, id)
+                if (resolver.delete(uri, null, null) > 0) {
+                    deleted++
+                    dao.deleteByIds(listOf(id))
+                }
+            } catch (e: Exception) {
+                // Counted as not deleted.
+            }
+        }
+        deleted
+    }
+
+    override suspend fun forget(songIds: List<Long>) {
+        songIds.chunked(500).forEach { dao.deleteByIds(it) }
+    }
+
     override fun observeSongsByArtist(artist: String): Flow<List<Song>> =
         dao.observeSongsByArtist(artist).map { list -> list.map { it.toDomain() } }
 
@@ -80,6 +108,7 @@ class LibraryRepositoryImpl @Inject constructor(
         if (hasExtraColumns) {
             projection += MediaStore.Audio.Media.ALBUM_ARTIST
             projection += MediaStore.Audio.Media.GENRE
+            projection += MediaStore.Audio.Media.BITRATE
         }
 
         val songs = ArrayList<SongEntity>()
@@ -103,6 +132,7 @@ class LibraryRepositoryImpl @Inject constructor(
             val iDateAdded = c.getColumnIndexOrThrow(MediaStore.Audio.Media.DATE_ADDED)
             val iAlbumArtist = if (hasExtraColumns) c.getColumnIndex(MediaStore.Audio.Media.ALBUM_ARTIST) else -1
             val iGenre = if (hasExtraColumns) c.getColumnIndex(MediaStore.Audio.Media.GENRE) else -1
+            val iBitrate = if (hasExtraColumns) c.getColumnIndex(MediaStore.Audio.Media.BITRATE) else -1
 
             while (c.moveToNext()) {
                 val path = c.getString(iData).orEmpty()
@@ -120,7 +150,8 @@ class LibraryRepositoryImpl @Inject constructor(
                     mimeType = c.getString(iMime).orEmpty(),
                     path = path,
                     dateAdded = c.getLong(iDateAdded),
-                    folder = path.substringBeforeLast('/', "")
+                    folder = path.substringBeforeLast('/', ""),
+                    bitrate = if (iBitrate >= 0 && !c.isNull(iBitrate)) c.getInt(iBitrate) else 0
                 )
             }
         }
@@ -145,5 +176,6 @@ internal fun SongEntity.toDomain() = Song(
     mimeType = mimeType,
     path = path,
     dateAdded = dateAdded,
-    folder = folder
+    folder = folder,
+    bitrate = bitrate
 )

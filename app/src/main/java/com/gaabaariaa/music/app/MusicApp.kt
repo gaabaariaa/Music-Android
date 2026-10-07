@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.LibraryMusic
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Icon
 import androidx.compose.material3.NavigationBar
@@ -40,6 +41,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gaabaariaa.music.R
 import com.gaabaariaa.music.feature.artwork.ArtworkScreen
+import com.gaabaariaa.music.feature.health.DuplicatesScreen
+import com.gaabaariaa.music.feature.health.HealthScreen
 import com.gaabaariaa.music.feature.library.DETAIL_ROUTE
 import com.gaabaariaa.music.feature.library.DetailScreen
 import com.gaabaariaa.music.feature.library.LibraryScreen
@@ -48,11 +51,15 @@ import com.gaabaariaa.music.feature.lyrics.LyricsScreen
 import com.gaabaariaa.music.feature.player.MiniPlayer
 import com.gaabaariaa.music.feature.player.NowPlayingScreen
 import com.gaabaariaa.music.feature.player.PlayerViewModel
+import com.gaabaariaa.music.feature.search.SearchScreen
 import com.gaabaariaa.music.feature.settings.SettingsScreen
 import com.gaabaariaa.music.feature.tags.TagEditorScreen
 
 private object Routes {
     const val LIBRARY = "library"
+    const val SEARCH = "search"
+    const val HEALTH = "health"
+    const val DUPLICATES = "duplicates"
     const val SETTINGS = "settings"
     const val NOW_PLAYING = "now_playing"
     const val TAGS = "tags"
@@ -64,6 +71,7 @@ private data class TopLevelDestination(val route: String, val label: Int, val ic
 
 private val topLevelDestinations = listOf(
     TopLevelDestination(Routes.LIBRARY, R.string.nav_library, Icons.Default.LibraryMusic),
+    TopLevelDestination(Routes.SEARCH, R.string.nav_search, Icons.Default.Search),
     TopLevelDestination(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings)
 )
 
@@ -142,9 +150,29 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
                     onEditTags = { navController.navigate(Routes.TAGS) },
                     onFindArtwork = { navController.navigate(Routes.ARTWORK) },
+                    onOpenLyrics = { id -> navController.navigate("lyrics/$id") },
+                    onOpenHealth = { navController.navigate(Routes.HEALTH) }
+                )
+            }
+            composable(Routes.SEARCH) {
+                SearchScreen(
+                    onPlay = playerViewModel::playQueue,
+                    onPlayNext = playerViewModel::playNext,
+                    onAddToQueue = playerViewModel::addToQueue,
+                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
+                    onEditTags = { navController.navigate(Routes.TAGS) },
+                    onFindArtwork = { navController.navigate(Routes.ARTWORK) },
                     onOpenLyrics = { id -> navController.navigate("lyrics/$id") }
                 )
             }
+            composable(Routes.HEALTH) {
+                HealthScreen(
+                    onBack = { navController.popBackStack() },
+                    onOpenDetail = { type, value -> navController.navigate(detailRoute(type, value)) },
+                    onOpenDuplicates = { navController.navigate(Routes.DUPLICATES) }
+                )
+            }
+            composable(Routes.DUPLICATES) { DuplicatesScreen(onBack = { navController.popBackStack() }) }
             composable(
                 route = DETAIL_ROUTE,
                 arguments = listOf(

@@ -19,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.Sort
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.HealthAndSafety
 import androidx.compose.material.icons.filled.Image
 import androidx.compose.material.icons.filled.SelectAll
 import androidx.compose.material.icons.filled.Refresh
@@ -77,6 +78,7 @@ fun LibraryScreen(
     onEditTags: () -> Unit,
     onFindArtwork: () -> Unit,
     onOpenLyrics: (Long) -> Unit,
+    onOpenHealth: () -> Unit,
     viewModel: LibraryViewModel = hiltViewModel()
 ) {
     val context = LocalContext.current
@@ -138,6 +140,9 @@ fun LibraryScreen(
                     title = { Text(stringResource(R.string.library_title)) },
                     actions = {
                         if (granted) {
+                            IconButton(onClick = onOpenHealth) {
+                                Icon(Icons.Default.HealthAndSafety, stringResource(R.string.health_title))
+                            }
                             IconButton(onClick = { viewModel.scan(force = true) }, enabled = !scan.scanning) {
                                 Icon(Icons.Default.Refresh, stringResource(R.string.action_rescan))
                             }
