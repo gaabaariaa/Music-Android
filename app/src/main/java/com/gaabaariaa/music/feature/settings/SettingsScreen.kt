@@ -24,6 +24,7 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.ListItem
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
@@ -32,6 +33,9 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
@@ -148,6 +152,27 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     }
                 }
             }
+
+            SectionTitle(stringResource(R.string.settings_downloads))
+            SwitchRow(
+                title = stringResource(R.string.settings_wifi_only),
+                summary = stringResource(R.string.settings_wifi_only_summary),
+                checked = settings.downloadWifiOnly,
+                enabled = true,
+                onChange = viewModel::setDownloadWifiOnly
+            )
+            var jamendoId by remember { mutableStateOf(settings.jamendoClientId) }
+            OutlinedTextField(
+                value = jamendoId,
+                onValueChange = {
+                    jamendoId = it
+                    viewModel.setJamendoClientId(it)
+                },
+                singleLine = true,
+                label = { Text(stringResource(R.string.settings_jamendo)) },
+                supportingText = { Text(stringResource(R.string.settings_jamendo_summary)) },
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 8.dp)
+            )
         }
     }
 }

@@ -5,6 +5,10 @@ import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.AppSettings
 import com.gaabaariaa.music.domain.model.ArtworkSearchResult
 import com.gaabaariaa.music.domain.model.AuditState
+import com.gaabaariaa.music.domain.model.DownloadItem
+import com.gaabaariaa.music.domain.model.DownloadableTrack
+import com.gaabaariaa.music.domain.model.SourceInfo
+import com.gaabaariaa.music.domain.model.SourceSearchOutcome
 import com.gaabaariaa.music.domain.model.HealthIssue
 import com.gaabaariaa.music.domain.model.LibraryHealth
 import com.gaabaariaa.music.domain.model.Lyrics
@@ -53,6 +57,8 @@ interface SettingsRepository {
     suspend fun setDynamicColor(enabled: Boolean)
     suspend fun setAmoled(enabled: Boolean)
     suspend fun setAccent(accent: Accent)
+    suspend fun setDownloadWifiOnly(enabled: Boolean)
+    suspend fun setJamendoClientId(id: String)
 }
 
 /** Runs library scans in the background and reports their progress. */
@@ -124,4 +130,25 @@ interface HealthRepository {
 interface LibraryAuditor {
     val state: Flow<AuditState>
     fun start()
+}
+
+/** Legal music sources (free licenses, public domain, or links the user supplies). */
+interface MusicSourceRepository {
+    val sources: List<SourceInfo>
+
+    /** [sourceId] "all" searches every source that works from a text query. */
+    suspend fun search(sourceId: String, query: String): SourceSearchOutcome
+}
+
+interface DownloadRepository {
+    fun observe(): Flow<List<DownloadItem>>
+    suspend fun enqueue(track: DownloadableTrack): Long
+    suspend fun pause(id: Long)
+    suspend fun resume(id: Long)
+    suspend fun cancel(id: Long)
+    suspend fun retry(id: Long)
+    suspend fun clearFinished()
+
+    /** Re-schedules downloads that were running when the process died. */
+    suspend fun reconcile()
 }

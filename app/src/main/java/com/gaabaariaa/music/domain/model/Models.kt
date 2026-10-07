@@ -42,7 +42,9 @@ data class AppSettings(
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val dynamicColor: Boolean = true,
     val amoled: Boolean = false,
-    val accent: Accent = Accent.PURPLE
+    val accent: Accent = Accent.PURPLE,
+    val downloadWifiOnly: Boolean = false,
+    val jamendoClientId: String = ""
 )
 
 enum class TagField { TITLE, ARTIST, ALBUM, ALBUM_ARTIST, GENRE, YEAR, TRACK, DISC, COMPOSER, COMMENT, LYRICS }
@@ -124,3 +126,48 @@ data class LibraryHealth(
 }
 
 data class AuditState(val running: Boolean = false, val done: Int = 0, val total: Int = 0)
+
+enum class DownloadState { QUEUED, DOWNLOADING, PAUSED, COMPLETED, FAILED }
+
+data class DownloadItem(
+    val id: Long,
+    val providerId: String,
+    val title: String,
+    val artist: String,
+    val album: String,
+    val license: String,
+    val pageUrl: String,
+    val state: DownloadState,
+    val totalBytes: Long,
+    val downloadedBytes: Long,
+    val speedBps: Long,
+    val error: String,
+    val songId: Long,
+    val createdAt: Long
+)
+
+/** One file offered by a legal source, with the license it is published under. */
+data class DownloadableTrack(
+    val providerId: String,
+    val remoteId: String,
+    val title: String,
+    val artist: String,
+    val album: String,
+    val durationSec: Int?,
+    val license: String,
+    val pageUrl: String,
+    val downloadUrl: String,
+    val coverUrl: String,
+    val extension: String
+)
+
+enum class SourceInput { SEARCH, URL }
+
+data class SourceInfo(val id: String, val name: String, val input: SourceInput)
+
+enum class SourceError { OFFLINE, SERVER, NOT_CONFIGURED, INVALID_INPUT }
+
+data class SourceSearchOutcome(
+    val tracks: List<DownloadableTrack> = emptyList(),
+    val errors: Map<String, SourceError> = emptyMap()
+)

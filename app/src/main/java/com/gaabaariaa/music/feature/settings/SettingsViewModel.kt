@@ -24,5 +24,7 @@ class SettingsViewModel @Inject constructor(
     fun setThemeMode(mode: ThemeMode) { viewModelScope.launch { repository.setThemeMode(mode) } }
     fun setDynamicColor(enabled: Boolean) { viewModelScope.launch { repository.setDynamicColor(enabled) } }
     fun setAmoled(enabled: Boolean) { viewModelScope.launch { repository.setAmoled(enabled) } }
+    fun setDownloadWifiOnly(enabled: Boolean) { viewModelScope.launch { repository.setDownloadWifiOnly(enabled) } }
+    fun setJamendoClientId(id: String) { viewModelScope.launch { repository.setJamendoClientId(id) } }
     fun setAccent(accent: Accent) { viewModelScope.launch { repository.setAccent(accent) } }
 }

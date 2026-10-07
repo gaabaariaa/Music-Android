@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Download
 import androidx.compose.material.icons.filled.LibraryMusic
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
@@ -41,6 +42,8 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.gaabaariaa.music.R
 import com.gaabaariaa.music.feature.artwork.ArtworkScreen
+import com.gaabaariaa.music.feature.downloads.DownloadsScreen
+import com.gaabaariaa.music.feature.downloads.SourceSearchScreen
 import com.gaabaariaa.music.feature.health.DuplicatesScreen
 import com.gaabaariaa.music.feature.health.HealthScreen
 import com.gaabaariaa.music.feature.library.DETAIL_ROUTE
@@ -58,6 +61,8 @@ import com.gaabaariaa.music.feature.tags.TagEditorScreen
 private object Routes {
     const val LIBRARY = "library"
     const val SEARCH = "search"
+    const val DOWNLOADS = "downloads"
+    const val DOWNLOAD_SEARCH = "download_search"
     const val HEALTH = "health"
     const val DUPLICATES = "duplicates"
     const val SETTINGS = "settings"
@@ -72,6 +77,7 @@ private data class TopLevelDestination(val route: String, val label: Int, val ic
 private val topLevelDestinations = listOf(
     TopLevelDestination(Routes.LIBRARY, R.string.nav_library, Icons.Default.LibraryMusic),
     TopLevelDestination(Routes.SEARCH, R.string.nav_search, Icons.Default.Search),
+    TopLevelDestination(Routes.DOWNLOADS, R.string.nav_downloads, Icons.Default.Download),
     TopLevelDestination(Routes.SETTINGS, R.string.nav_settings, Icons.Default.Settings)
 )
 
@@ -165,6 +171,13 @@ fun MusicApp(playerViewModel: PlayerViewModel = hiltViewModel()) {
                     onOpenLyrics = { id -> navController.navigate("lyrics/$id") }
                 )
             }
+            composable(Routes.DOWNLOADS) {
+                DownloadsScreen(
+                    onOpenSearch = { navController.navigate(Routes.DOWNLOAD_SEARCH) },
+                    onPlay = playerViewModel::playQueue
+                )
+            }
+            composable(Routes.DOWNLOAD_SEARCH) { SourceSearchScreen(onBack = { navController.popBackStack() }) }
             composable(Routes.HEALTH) {
                 HealthScreen(
                     onBack = { navController.popBackStack() },

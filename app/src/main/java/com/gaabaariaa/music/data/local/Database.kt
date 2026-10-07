@@ -127,15 +127,68 @@ data class AuditEntity(
     val hasLyrics: Boolean
 )
 
+@Entity(tableName = "downloads")
+data class DownloadEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val providerId: String,
+    val remoteId: String,
+    val title: String,
+    val artist: String,
+    val album: String,
+    val url: String,
+    val extension: String,
+    val license: String,
+    val pageUrl: String,
+    val coverUrl: String,
+    val state: String,
+    val totalBytes: Long,
+    val downloadedBytes: Long,
+    val speedBps: Long,
+    val error: String,
+    val songId: Long,
+    val createdAt: Long
+)
+
+@Dao
+interface DownloadDao {
+    @Query("SELECT * FROM downloads ORDER BY createdAt DESC")
+    fun observeAll(): Flow<List<DownloadEntity>>
+
+    @Query("SELECT * FROM downloads WHERE id = :id")
+    suspend fun get(id: Long): DownloadEntity?
+
+    @Query("SELECT * FROM downloads WHERE state IN ('QUEUED', 'DOWNLOADING')")
+    suspend fun getActive(): List<DownloadEntity>
+
+    @Insert
+    suspend fun insert(entity: DownloadEntity): Long
+
+    @Query("UPDATE downloads SET state = :state, error = :error WHERE id = :id")
+    suspend fun updateState(id: Long, state: String, error: String)
+
+    @Query("UPDATE downloads SET downloadedBytes = :downloaded, totalBytes = :total, speedBps = :speed WHERE id = :id")
+    suspend fun updateProgress(id: Long, downloaded: Long, total: Long, speed: Long)
+
+    @Query("UPDATE downloads SET state = 'COMPLETED', error = '', songId = :songId, speedBps = 0, downloadedBytes = totalBytes WHERE id = :id")
+    suspend fun markCompleted(id: Long, songId: Long)
+
+    @Query("DELETE FROM downloads WHERE id = :id")
+    suspend fun delete(id: Long)
+
+    @Query("DELETE FROM downloads WHERE state IN ('COMPLETED', 'FAILED')")
+    suspend fun deleteFinished()
+}
+
 @Database(
-    entities = [SongEntity::class, LyricsEntity::class, AuditEntity::class],
-    version = 4,
+    entities = [SongEntity::class, LyricsEntity::class, AuditEntity::class, DownloadEntity::class],
+    version = 5,
     exportSchema = false
 )
 abstract class MusicDatabase : RoomDatabase() {
     abstract fun songDao(): SongDao
     abstract fun lyricsDao(): LyricsDao
     abstract fun insightsDao(): InsightsDao
+    abstract fun downloadDao(): DownloadDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -168,6 +221,19 @@ val MIGRATION_3_4 = object : Migration(3, 4) {
             "CREATE TABLE IF NOT EXISTS song_audit (" +
                 "songId INTEGER NOT NULL, sizeBytes INTEGER NOT NULL, hasArtwork INTEGER NOT NULL, " +
                 "hasLyrics INTEGER NOT NULL, PRIMARY KEY(songId))"
+        )
+    }
+}
+
+val MIGRATION_4_5 = object : Migration(4, 5) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS downloads (" +
+                "id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, providerId TEXT NOT NULL, remoteId TEXT NOT NULL, " +
+                "title TEXT NOT NULL, artist TEXT NOT NULL, album TEXT NOT NULL, url TEXT NOT NULL, " +
+                "extension TEXT NOT NULL, license TEXT NOT NULL, pageUrl TEXT NOT NULL, coverUrl TEXT NOT NULL, " +
+                "state TEXT NOT NULL, totalBytes INTEGER NOT NULL, downloadedBytes INTEGER NOT NULL, " +
+                "speedBps INTEGER NOT NULL, error TEXT NOT NULL, songId INTEGER NOT NULL, createdAt INTEGER NOT NULL)"
         )
     }
 }
