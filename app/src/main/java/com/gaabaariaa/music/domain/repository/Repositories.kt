@@ -4,8 +4,12 @@ import com.gaabaariaa.music.domain.model.Accent
 import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.AppSettings
 import com.gaabaariaa.music.domain.model.ArtworkSearchResult
+import com.gaabaariaa.music.domain.model.AuditState
+import com.gaabaariaa.music.domain.model.HealthIssue
+import com.gaabaariaa.music.domain.model.LibraryHealth
 import com.gaabaariaa.music.domain.model.Lyrics
 import com.gaabaariaa.music.domain.model.OnlineLyricsResult
+import com.gaabaariaa.music.domain.model.SearchResults
 import com.gaabaariaa.music.domain.model.ArtistSummary
 import com.gaabaariaa.music.domain.model.FolderSummary
 import com.gaabaariaa.music.domain.model.GenreSummary
@@ -24,6 +28,15 @@ interface LibraryRepository {
     fun observeGenres(): Flow<List<GenreSummary>>
     fun observeFolders(): Flow<List<FolderSummary>>
     suspend fun getSong(id: Long): Song?
+
+    /** Android 11+ system dialog that asks the user to confirm deleting these files; null on older versions. */
+    fun createDeleteRequest(songIds: List<Long>): IntentSender?
+
+    /** Deletes files directly (Android 10 and older). Returns how many were deleted. */
+    suspend fun deleteDirect(songIds: List<Long>): Int
+
+    /** Removes songs from the library database after their files are gone. */
+    suspend fun forget(songIds: List<Long>)
     fun observeSongsByArtist(artist: String): Flow<List<Song>>
     fun observeSongsByAlbum(album: String): Flow<List<Song>>
     fun observeSongsByGenre(genre: String): Flow<List<Song>>
@@ -96,4 +109,19 @@ interface LyricsRepository {
     suspend fun readText(uri: String): String?
 
     suspend fun fetchOnline(title: String, artist: String, album: String, durationMs: Long): OnlineLyricsResult
+}
+
+interface SearchRepository {
+    suspend fun search(query: String): SearchResults
+}
+
+interface HealthRepository {
+    fun observeHealth(): Flow<LibraryHealth>
+    fun observeSongs(issue: HealthIssue): Flow<List<Song>>
+}
+
+/** Inspects the files in the background for embedded artwork and lyrics. */
+interface LibraryAuditor {
+    val state: Flow<AuditState>
+    fun start()
 }

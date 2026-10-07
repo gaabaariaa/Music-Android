@@ -154,4 +154,35 @@
     <string name="lyrics_source_online">online</string>
     <string name="lyrics_source_imported">imported file</string>
     <string name="lyrics_attribution">Online lyrics from LRCLIB.</string>
+    <string name="nav_search">Search</string>
+    <string name="search_global_hint">Songs, artists, albums, lyrics…</string>
+    <string name="search_start">Type to search your whole library.</string>
+    <string name="search_no_results">Nothing matches your search.</string>
+    <string name="search_in_lyrics">In saved lyrics</string>
+    <string name="health_title">Library health</string>
+    <string name="health_score">%d%%</string>
+    <string name="health_how">Score = share of checks passed: title, artist, album and genre for every song, plus artwork and lyrics for songs that have been checked.</string>
+    <string name="health_audit_progress">Artwork and lyrics checked for %1$d of %2$d songs</string>
+    <string name="health_audit_running">Checking files… %1$d / %2$d</string>
+    <string name="health_run_audit">Check artwork and lyrics</string>
+    <string name="health_needs_android_11">Genre and quality checks need Android 11 or newer.</string>
+    <string name="issue_missing_title">Missing title</string>
+    <string name="issue_missing_artist">Missing artist</string>
+    <string name="issue_missing_album">Missing album</string>
+    <string name="issue_missing_genre">Missing genre</string>
+    <string name="issue_unrecognized">Unrecognized (no artist and no album)</string>
+    <string name="issue_low_quality">Low quality (under 128 kbps)</string>
+    <string name="issue_missing_artwork">Missing artwork</string>
+    <string name="issue_missing_lyrics">Missing lyrics</string>
+    <string name="issue_duplicates">Duplicate songs (groups)</string>
+    <string name="duplicates_title">Duplicates</string>
+    <string name="duplicates_none">No duplicates found.</string>
+    <string name="duplicates_delete">Delete selected (%d)</string>
+    <string name="duplicates_keep_one">Keep at least one copy of each song.</string>
+    <string name="duplicates_deleted">%d files deleted</string>
+    <string name="duplicates_delete_failed">Could not delete the files.</string>
+    <string name="duplicates_confirm_title">Delete files?</string>
+    <string name="duplicates_confirm_text">This permanently deletes %d files from your device.</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
 </resources>

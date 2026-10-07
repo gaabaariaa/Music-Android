@@ -29,7 +29,9 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gaabaariaa.music.R
+import com.gaabaariaa.music.domain.model.HealthIssue
 import com.gaabaariaa.music.domain.model.Song
+import com.gaabaariaa.music.feature.health.label
 
 @Composable
 fun DetailScreen(
@@ -53,9 +55,14 @@ fun DetailScreen(
             DetailType.ALBUM -> R.string.unknown_album
             DetailType.GENRE -> R.string.unknown_genre
             DetailType.FOLDER -> R.string.unknown_folder
+            DetailType.ISSUE -> R.string.unknown_title
         }
     )
-    val title = viewModel.value.ifBlank { unknown }
+    val title = if (viewModel.type == DetailType.ISSUE) {
+        stringResource(HealthIssue.valueOf(viewModel.value).label())
+    } else {
+        viewModel.value.ifBlank { unknown }
+    }
 
     Scaffold(
         topBar = {

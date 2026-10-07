@@ -32,7 +32,8 @@ data class SongEntity(
     val mimeType: String,
     val path: String,
     @ColumnInfo(defaultValue = "0") val dateAdded: Long = 0L,
-    @ColumnInfo(defaultValue = "''") val folder: String = ""
+    @ColumnInfo(defaultValue = "''") val folder: String = "",
+    @ColumnInfo(defaultValue = "0") val bitrate: Int = 0
 )
 
 data class ArtistRow(val name: String, val songCount: Int, val albumCount: Int)
@@ -117,10 +118,24 @@ interface LyricsDao {
     suspend fun delete(songId: Long)
 }
 
-@Database(entities = [SongEntity::class, LyricsEntity::class], version = 3, exportSchema = false)
+@Entity(tableName = "song_audit")
+data class AuditEntity(
+    @PrimaryKey val songId: Long,
+    /** Size of the file when it was inspected; a different size means the audit is stale. */
+    val sizeBytes: Long,
+    val hasArtwork: Boolean,
+    val hasLyrics: Boolean
+)
+
+@Database(
+    entities = [SongEntity::class, LyricsEntity::class, AuditEntity::class],
+    version = 4,
+    exportSchema = false
+)
 abstract class MusicDatabase : RoomDatabase() {
     abstract fun songDao(): SongDao
     abstract fun lyricsDao(): LyricsDao
+    abstract fun insightsDao(): InsightsDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -142,6 +157,17 @@ val MIGRATION_2_3 = object : Migration(2, 3) {
             "CREATE TABLE IF NOT EXISTS lyrics (" +
                 "songId INTEGER NOT NULL, content TEXT NOT NULL, synced INTEGER NOT NULL, " +
                 "source TEXT NOT NULL, PRIMARY KEY(songId))"
+        )
+    }
+}
+
+val MIGRATION_3_4 = object : Migration(3, 4) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("ALTER TABLE songs ADD COLUMN bitrate INTEGER NOT NULL DEFAULT 0")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS song_audit (" +
+                "songId INTEGER NOT NULL, sizeBytes INTEGER NOT NULL, hasArtwork INTEGER NOT NULL, " +
+                "hasLyrics INTEGER NOT NULL, PRIMARY KEY(songId))"
         )
     }
 }

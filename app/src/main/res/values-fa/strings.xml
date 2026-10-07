@@ -154,4 +154,35 @@
     <string name="lyrics_source_online">اینترنت</string>
     <string name="lyrics_source_imported">فایل واردشده</string>
     <string name="lyrics_attribution">متن‌های آنلاین از LRCLIB.</string>
+    <string name="nav_search">جستجو</string>
+    <string name="search_global_hint">آهنگ، هنرمند، آلبوم، متن آهنگ…</string>
+    <string name="search_start">برای جستجو در کل کتابخانه تایپ کنید.</string>
+    <string name="search_no_results">چیزی مطابق جستجوی شما پیدا نشد.</string>
+    <string name="search_in_lyrics">در متن‌های ذخیره‌شده</string>
+    <string name="health_title">سلامت کتابخانه</string>
+    <string name="health_score">%d٪</string>
+    <string name="health_how">امتیاز = درصد بررسی‌های موفق: عنوان، هنرمند، آلبوم و ژانر برای همه‌ی آهنگ‌ها، به‌علاوه‌ی کاور و متن برای آهنگ‌هایی که بررسی شده‌اند.</string>
+    <string name="health_audit_progress">کاور و متن %1$d آهنگ از %2$d آهنگ بررسی شده است</string>
+    <string name="health_audit_running">در حال بررسی فایل‌ها… %1$d / %2$d</string>
+    <string name="health_run_audit">بررسی کاور و متن آهنگ‌ها</string>
+    <string name="health_needs_android_11">بررسی ژانر و کیفیت به اندروید ۱۱ یا بالاتر نیاز دارد.</string>
+    <string name="issue_missing_title">بدون عنوان</string>
+    <string name="issue_missing_artist">بدون هنرمند</string>
+    <string name="issue_missing_album">بدون آلبوم</string>
+    <string name="issue_missing_genre">بدون ژانر</string>
+    <string name="issue_unrecognized">شناسایی‌نشده (بدون هنرمند و آلبوم)</string>
+    <string name="issue_low_quality">کیفیت پایین (کمتر از ۱۲۸ کیلوبیت بر ثانیه)</string>
+    <string name="issue_missing_artwork">بدون کاور</string>
+    <string name="issue_missing_lyrics">بدون متن آهنگ</string>
+    <string name="issue_duplicates">آهنگ‌های تکراری (تعداد گروه‌ها)</string>
+    <string name="duplicates_title">تکراری‌ها</string>
+    <string name="duplicates_none">آهنگ تکراری پیدا نشد.</string>
+    <string name="duplicates_delete">حذف انتخاب‌شده‌ها (%d)</string>
+    <string name="duplicates_keep_one">از هر آهنگ باید دست‌کم یک نسخه بماند.</string>
+    <string name="duplicates_deleted">%d فایل حذف شد</string>
+    <string name="duplicates_delete_failed">حذف فایل‌ها ممکن نشد.</string>
+    <string name="duplicates_confirm_title">فایل‌ها حذف شوند؟</string>
+    <string name="duplicates_confirm_text">%d فایل برای همیشه از دستگاه حذف می‌شود.</string>
+    <string name="action_delete">حذف</string>
+    <string name="action_cancel">انصراف</string>
 </resources>
