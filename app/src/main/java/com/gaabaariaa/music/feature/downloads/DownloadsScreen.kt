@@ -31,6 +31,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,7 +42,19 @@ import com.gaabaariaa.music.core.util.formatDuration
 import com.gaabaariaa.music.core.util.remainingSeconds
 import com.gaabaariaa.music.domain.model.DownloadItem
 import com.gaabaariaa.music.domain.model.DownloadState
+import com.gaabaariaa.music.domain.model.LicenseCodes
 import com.gaabaariaa.music.domain.model.Song
+
+@Composable
+fun licenseLabel(license: String): String = when (license) {
+    LicenseCodes.SEE_ITEM_PAGE -> stringResource(R.string.license_see_item_page)
+    LicenseCodes.SEE_SOURCE_PAGE -> stringResource(R.string.license_see_source_page)
+    LicenseCodes.FREE_LICENSE -> stringResource(R.string.license_free)
+    LicenseCodes.CREATIVE_COMMONS -> stringResource(R.string.license_cc)
+    LicenseCodes.FEED_PUBLISHER -> stringResource(R.string.license_feed)
+    LicenseCodes.USER_LINK -> stringResource(R.string.license_user_link)
+    else -> license
+}
 
 @Composable
 fun providerLabel(id: String): String = when (id) {
@@ -109,7 +123,7 @@ private fun LazyListScope.section(
             stringResource(titleRes),
             style = MaterialTheme.typography.titleSmall,
             color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp).semantics { heading() }
         )
     }
     items(items, key = { "download:" + it.id }) { item ->
@@ -128,7 +142,7 @@ private fun DownloadRow(item: DownloadItem, viewModel: DownloadsViewModel, onPla
     val unknownArtist = stringResource(R.string.unknown_artist)
     val separator = stringResource(R.string.two_parts)
     Column(Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 10.dp)) {
-        Text(item.title, style = MaterialTheme.typography.bodyLarge, maxLines = 1)
+        Text(item.title.ifBlank { stringResource(R.string.unknown_title) }, style = MaterialTheme.typography.bodyLarge, maxLines = 1)
         Text(
             separator.format(item.artist.ifBlank { unknownArtist }, providerLabel(item.providerId)),
             style = MaterialTheme.typography.bodySmall,
@@ -153,7 +167,7 @@ private fun DownloadRow(item: DownloadItem, viewModel: DownloadsViewModel, onPla
                 color = MaterialTheme.colorScheme.error
             )
             DownloadState.COMPLETED -> Text(
-                stringResource(R.string.dl_saved) + " • " + item.license,
+                stringResource(R.string.dl_saved) + " • " + licenseLabel(item.license),
                 style = MaterialTheme.typography.labelMedium
             )
         }

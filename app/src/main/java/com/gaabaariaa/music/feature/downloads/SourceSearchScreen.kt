@@ -123,7 +123,7 @@ fun SourceSearchScreen(onBack: () -> Unit, viewModel: SourceSearchViewModel = hi
                 items(state.tracks, key = { it.providerId + "|" + it.remoteId }) { track ->
                     val added = (track.providerId + "|" + track.remoteId) in state.added
                     ListItem(
-                        headlineContent = { Text(track.title, maxLines = 2) },
+                        headlineContent = { Text(track.title.ifBlank { stringResource(R.string.unknown_title) }, maxLines = 2) },
                         supportingContent = {
                             Column {
                                 Text(
@@ -134,7 +134,7 @@ fun SourceSearchScreen(onBack: () -> Unit, viewModel: SourceSearchViewModel = hi
                                     maxLines = 1
                                 )
                                 Text(
-                                    stringResource(R.string.license_label, track.license) + " • " +
+                                    stringResource(R.string.license_label, licenseLabel(track.license)) + " • " +
                                         providerLabel(track.providerId),
                                     style = MaterialTheme.typography.labelSmall,
                                     color = MaterialTheme.colorScheme.primary,

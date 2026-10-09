@@ -49,6 +49,8 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -56,7 +58,9 @@ import com.gaabaariaa.music.R
 import com.gaabaariaa.music.core.designsystem.DynamicColorSupported
 import com.gaabaariaa.music.core.designsystem.accentSwatch
 import com.gaabaariaa.music.core.designsystem.isDarkTheme
+import com.gaabaariaa.music.core.util.formatNumber
 import com.gaabaariaa.music.domain.model.Accent
+import com.gaabaariaa.music.domain.model.AppLanguage
 import com.gaabaariaa.music.domain.model.CardShape
 import com.gaabaariaa.music.domain.model.LibraryLayout
 import com.gaabaariaa.music.domain.model.LibraryTab
@@ -74,6 +78,14 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
         contentWindowInsets = WindowInsets(0.dp)
     ) { pad ->
         Column(Modifier.padding(pad).verticalScroll(rememberScrollState())) {
+            // ------------------------------------------------------------ language
+            SectionTitle(stringResource(R.string.settings_language))
+            AppLanguage.entries.forEach { language ->
+                RadioRow(stringResource(language.label()), settings.language == language) {
+                    viewModel.setLanguage(language)
+                }
+            }
+
             // ------------------------------------------------------------ appearance
             SectionTitle(stringResource(R.string.settings_appearance))
             Subtitle(stringResource(R.string.theme_mode))
@@ -105,7 +117,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
                     val selected = settings.accent == accent
                     Box(
                         Modifier
-                            .size(44.dp)
+                            .size(48.dp)
                             .clip(CircleShape)
                             .background(accentSwatch(accent, dark))
                             .then(
@@ -132,7 +144,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             }
             SliderRow(
                 title = stringResource(R.string.settings_corner_radius),
-                valueText = "${settings.cornerRadiusDp} dp",
+                valueText = stringResource(R.string.settings_value_dp, formatNumber(settings.cornerRadiusDp)),
                 value = settings.cornerRadiusDp.toFloat(),
                 range = 0f..32f,
                 steps = 7,
@@ -140,7 +152,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             )
             SliderRow(
                 title = stringResource(R.string.settings_text_size),
-                valueText = "${(settings.textScale * 100).toInt()}%",
+                valueText = stringResource(R.string.settings_value_percent, formatNumber((settings.textScale * 100).toInt())),
                 value = settings.textScale,
                 range = 0.8f..1.4f,
                 steps = 5,
@@ -164,7 +176,7 @@ fun SettingsScreen(viewModel: SettingsViewModel = hiltViewModel()) {
             if (settings.libraryLayout == LibraryLayout.GRID) {
                 SliderRow(
                     title = stringResource(R.string.settings_grid_columns),
-                    valueText = settings.gridColumns.toString(),
+                    valueText = formatNumber(settings.gridColumns),
                     value = settings.gridColumns.toFloat(),
                     range = 2f..4f,
                     steps = 1,
@@ -264,7 +276,7 @@ private fun SectionTitle(text: String) {
         text,
         style = MaterialTheme.typography.labelLarge,
         color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp).semantics { heading() }
     )
 }
 
@@ -368,6 +380,12 @@ private fun ThemeMode.label(): Int = when (this) {
     ThemeMode.SYSTEM -> R.string.theme_system
     ThemeMode.LIGHT -> R.string.theme_light
     ThemeMode.DARK -> R.string.theme_dark
+}
+
+private fun AppLanguage.label(): Int = when (this) {
+    AppLanguage.SYSTEM -> R.string.language_system
+    AppLanguage.FA -> R.string.language_fa
+    AppLanguage.EN -> R.string.language_en
 }
 
 private fun CardShape.label(): Int = when (this) {

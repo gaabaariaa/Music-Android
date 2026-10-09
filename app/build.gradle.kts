@@ -14,8 +14,8 @@ android {
         applicationId = "com.gaabaariaa.music"
         minSdk = 26
         targetSdk = 35
-        versionCode = 12
-        versionName = "0.12.0"
+        versionCode = 13
+        versionName = "0.13.0"
     }
 
     // Fixed debug key: every CI build is signed with the same key, so new APKs
@@ -28,6 +28,9 @@ android {
             keyPassword = "android"
         }
     }
+
+    // Only the two supported languages are kept from libraries, which keeps the APK smaller.
+    androidResources { localeFilters += listOf("en", "fa") }
 
     buildFeatures { compose = true }
 

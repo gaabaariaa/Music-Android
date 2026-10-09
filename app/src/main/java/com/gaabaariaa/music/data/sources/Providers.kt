@@ -4,6 +4,7 @@ import com.gaabaariaa.music.core.di.IoDispatcher
 import com.gaabaariaa.music.data.net.USER_AGENT
 import com.gaabaariaa.music.data.net.httpGet
 import com.gaabaariaa.music.domain.model.DownloadableTrack
+import com.gaabaariaa.music.domain.model.LicenseCodes
 import com.gaabaariaa.music.domain.model.SourceError
 import com.gaabaariaa.music.domain.model.SourceInfo
 import com.gaabaariaa.music.domain.model.SourceInput
@@ -114,11 +115,11 @@ private fun directLink(input: String): List<DownloadableTrack> {
             DownloadableTrack(
                 providerId = "direct",
                 remoteId = link,
-                title = name.substringBeforeLast('.').ifBlank { "Untitled" },
+                title = name.substringBeforeLast('.'),
                 artist = "",
                 album = "",
                 durationSec = null,
-                license = "Link provided by you",
+                license = LicenseCodes.USER_LINK,
                 pageUrl = link,
                 downloadUrl = link,
                 coverUrl = "",

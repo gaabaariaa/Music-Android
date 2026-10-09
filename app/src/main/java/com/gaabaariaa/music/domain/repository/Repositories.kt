@@ -4,6 +4,7 @@ import com.gaabaariaa.music.domain.model.Accent
 import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.AppSettings
 import com.gaabaariaa.music.domain.model.ArtworkSearchResult
+import com.gaabaariaa.music.domain.model.AppLanguage
 import com.gaabaariaa.music.domain.model.AuditState
 import com.gaabaariaa.music.domain.model.CardShape
 import com.gaabaariaa.music.domain.model.HomeSectionConfig
@@ -75,6 +76,7 @@ interface SettingsRepository {
     suspend fun setLyricsFirst(enabled: Boolean)
     suspend fun setLibraryTabs(tabs: List<LibraryTab>)
     suspend fun setHomeSections(sections: List<HomeSectionConfig>)
+    suspend fun setLanguage(language: AppLanguage)
 }
 
 /** Runs library scans in the background and reports their progress. */

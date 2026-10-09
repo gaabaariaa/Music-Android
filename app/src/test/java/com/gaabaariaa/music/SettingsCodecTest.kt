@@ -38,3 +38,12 @@ class SettingsCodecTest {
         assertTrue(decodeLibraryTabs("garbage").containsAll(LibraryTab.entries))
     }
 }
+
+class NumberFormatTest {
+    @Test
+    fun formatsNumbersWithoutGrouping() {
+        assertEquals("1.25", com.gaabaariaa.music.core.util.formatNumber(1.25, 2, java.util.Locale.US))
+        assertEquals("2", com.gaabaariaa.music.core.util.formatNumber(2.0, 2, java.util.Locale.US))
+        assertEquals("1500", com.gaabaariaa.music.core.util.formatNumber(1500, java.util.Locale.US))
+    }
+}

@@ -11,6 +11,7 @@ import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import com.gaabaariaa.music.domain.model.Accent
+import com.gaabaariaa.music.domain.model.AppLanguage
 import com.gaabaariaa.music.domain.model.AppSettings
 import com.gaabaariaa.music.domain.model.CardShape
 import com.gaabaariaa.music.domain.model.HomeSectionConfig
@@ -28,6 +29,7 @@ import javax.inject.Inject
 import javax.inject.Singleton
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 private val Context.settingsDataStore: DataStore<Preferences> by preferencesDataStore(name = "settings")
@@ -56,6 +58,7 @@ class DataStoreSettingsRepository @Inject constructor(
         val LYRICS_FIRST = booleanPreferencesKey("lyrics_first")
         val TABS = stringPreferencesKey("library_tabs")
         val HOME = stringPreferencesKey("home_sections")
+        val LANGUAGE = stringPreferencesKey("language")
     }
 
     override val settings: Flow<AppSettings> = context.settingsDataStore.data
@@ -80,7 +83,8 @@ class DataStoreSettingsRepository @Inject constructor(
                 keepScreenOn = p[Keys.KEEP_ON] ?: defaults.keepScreenOn,
                 lyricsFirst = p[Keys.LYRICS_FIRST] ?: defaults.lyricsFirst,
                 libraryTabs = decodeLibraryTabs(p[Keys.TABS]),
-                homeSections = decodeHomeSections(p[Keys.HOME])
+                homeSections = decodeHomeSections(p[Keys.HOME]),
+                language = p[Keys.LANGUAGE].toEnum(defaults.language)
             )
         }
 
@@ -104,6 +108,7 @@ class DataStoreSettingsRepository @Inject constructor(
         context.settingsDataStore.edit { it[Keys.JAMENDO] = id.trim() }
     }
 
+    override suspend fun setLanguage(language: AppLanguage) { context.settingsDataStore.edit { it[Keys.LANGUAGE] = language.name } }
     override suspend fun setCornerRadius(dp: Int) { context.settingsDataStore.edit { it[Keys.CORNER] = dp } }
     override suspend fun setCardShape(shape: CardShape) { context.settingsDataStore.edit { it[Keys.CARD_SHAPE] = shape.name } }
     override suspend fun setTextScale(scale: Float) { context.settingsDataStore.edit { it[Keys.TEXT_SCALE] = scale } }
@@ -126,3 +131,13 @@ class DataStoreSettingsRepository @Inject constructor(
 
 private inline fun <reified E : Enum<E>> String?.toEnum(default: E): E =
     this?.let { name -> enumValues<E>().firstOrNull { it.name == name } } ?: default
+
+/** Reads the saved language before any Activity exists (needed to build the localized context). */
+fun readLanguageBlocking(context: Context): AppLanguage = try {
+    kotlinx.coroutines.runBlocking {
+        context.settingsDataStore.data.map { p -> p[stringPreferencesKey("language")].toEnum(AppLanguage.SYSTEM) }
+            .first()
+    }
+} catch (e: Exception) {
+    AppLanguage.SYSTEM
+}
