@@ -55,7 +55,7 @@ class SourceParsersTest {
         val item = ArchiveItem("x", "A", "B", "")
         val tracks = parseArchiveMetadata("""{"files":[{"name":"a.ogg","format":"Ogg Vorbis"}]}""", item)
         assertEquals("ogg", tracks.single().extension)
-        assertEquals("See item page", tracks.single().license)
+        assertEquals(com.gaabaariaa.music.domain.model.LicenseCodes.SEE_ITEM_PAGE, tracks.single().license)
     }
 
     @Test

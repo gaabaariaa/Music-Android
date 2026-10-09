@@ -56,8 +56,21 @@ data class AppSettings(
     val keepScreenOn: Boolean = false,
     val lyricsFirst: Boolean = false,
     val libraryTabs: List<LibraryTab> = LibraryTab.entries.toList(),
-    val homeSections: List<HomeSectionConfig> = defaultHomeSections()
+    val homeSections: List<HomeSectionConfig> = defaultHomeSections(),
+    val language: AppLanguage = AppLanguage.SYSTEM
 )
+
+enum class AppLanguage { SYSTEM, FA, EN }
+
+/** Language-neutral license placeholders; the UI turns them into translated text. */
+object LicenseCodes {
+    const val SEE_ITEM_PAGE = "@see_item_page"
+    const val SEE_SOURCE_PAGE = "@see_source_page"
+    const val FREE_LICENSE = "@free_license"
+    const val CREATIVE_COMMONS = "@creative_commons"
+    const val FEED_PUBLISHER = "@feed_publisher"
+    const val USER_LINK = "@user_link"
+}
 
 enum class CardShape { ROUNDED, CUT }
 

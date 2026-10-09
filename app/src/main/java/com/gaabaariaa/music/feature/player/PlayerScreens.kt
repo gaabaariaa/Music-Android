@@ -62,10 +62,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import com.gaabaariaa.music.R
 import com.gaabaariaa.music.core.util.formatDuration
+import com.gaabaariaa.music.core.util.formatNumber
 import com.gaabaariaa.music.core.designsystem.LocalAppSettings
 import com.gaabaariaa.music.feature.library.LocalFavorites
 import com.gaabaariaa.music.feature.lyrics.LyricsPane
@@ -81,7 +85,10 @@ fun MiniPlayer(
     onPlayPause: () -> Unit,
     onNext: () -> Unit
 ) {
-    Surface(tonalElevation = 3.dp, modifier = Modifier.clickable(onClick = onOpen)) {
+    Surface(
+        tonalElevation = 3.dp,
+        modifier = Modifier.clickable(onClickLabel = stringResource(R.string.mini_player_open), onClick = onOpen)
+    ) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
@@ -220,7 +227,13 @@ private fun ColumnScope.PlayerPane(
     Text(state.artist.ifBlank { stringResource(R.string.unknown_artist) }, style = MaterialTheme.typography.titleMedium)
     Text(state.album.ifBlank { stringResource(R.string.unknown_album) }, style = MaterialTheme.typography.bodyMedium)
 
+    val seekDescription = stringResource(R.string.seek)
+    val seekState = stringResource(R.string.seek_state, formatDuration(shown.toLong()), formatDuration(state.durationMs))
     Slider(
+        modifier = Modifier.semantics {
+            contentDescription = seekDescription
+            stateDescription = seekState
+        },
         value = shown.coerceIn(0f, max),
         onValueChange = { dragging = true; dragValue = it },
         onValueChangeFinished = { onSeek(dragValue.toLong()); dragging = false },
@@ -288,12 +301,12 @@ private fun SpeedButton(speed: Float, onSpeed: (Float) -> Unit) {
     Box {
         TextButton(onClick = { open = true }) {
             Icon(Icons.Default.Speed, contentDescription = stringResource(R.string.playback_speed))
-            Text("${speed}×", Modifier.padding(start = 8.dp))
+            Text(stringResource(R.string.speed_value, formatNumber(speed.toDouble(), 2)), Modifier.padding(start = 8.dp))
         }
         DropdownMenu(expanded = open, onDismissRequest = { open = false }) {
             speedOptions.forEach { option ->
                 DropdownMenuItem(
-                    text = { Text("${option}×") },
+                    text = { Text(stringResource(R.string.speed_value, formatNumber(option.toDouble(), 2))) },
                     onClick = {
                         open = false
                         onSpeed(option)

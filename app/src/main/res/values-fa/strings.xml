@@ -271,4 +271,22 @@
     <string name="settings_lyrics_first_summary">Now Playing روی تب متن آهنگ شروع می‌شود</string>
     <string name="move_up">بالا بردن</string>
     <string name="move_down">پایین بردن</string>
+    <string name="settings_language">زبان</string>
+    <string name="language_system">پیش‌فرض سیستم</string>
+    <string name="language_fa">فارسی</string>
+    <string name="language_en">English</string>
+    <string name="settings_value_dp">%s dp</string>
+    <string name="settings_value_percent">%s٪</string>
+    <string name="speed_value">%s×</string>
+    <string name="seek">جست‌وجو در آهنگ</string>
+    <string name="seek_state">%1$s از %2$s</string>
+    <string name="mini_player_open">باز کردن پخش‌کننده</string>
+    <string name="downloads_channel_name">دانلودها</string>
+    <string name="dl_notification_title">در حال دانلود موسیقی</string>
+    <string name="license_see_item_page">صفحه‌ی آیتم را ببینید</string>
+    <string name="license_see_source_page">صفحه‌ی منبع را ببینید</string>
+    <string name="license_free">مجوز آزاد</string>
+    <string name="license_cc">کریتیو کامنز</string>
+    <string name="license_feed">تعیین‌شده توسط ناشر فید</string>
+    <string name="license_user_link">لینکی که خودتان داده‌اید</string>
 </resources>

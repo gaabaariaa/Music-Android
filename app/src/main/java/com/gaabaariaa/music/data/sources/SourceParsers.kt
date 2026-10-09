@@ -1,6 +1,7 @@
 package com.gaabaariaa.music.data.sources
 
 import com.gaabaariaa.music.domain.model.DownloadableTrack
+import com.gaabaariaa.music.domain.model.LicenseCodes
 import java.io.ByteArrayInputStream
 import java.net.URLEncoder
 import javax.xml.parsers.DocumentBuilderFactory
@@ -69,7 +70,7 @@ internal fun parseArchiveMetadata(json: String, item: ArchiveItem, limit: Int = 
     val album = item.title.ifBlank { meta?.firstString("title").orEmpty() }
     val creator = item.creator.ifBlank { meta?.firstString("creator").orEmpty() }
     val licenseUrl = item.licenseUrl.ifBlank { meta?.firstString("licenseurl").orEmpty() }
-    val license = shortLicense(licenseUrl).ifBlank { "See item page" }
+    val license = shortLicense(licenseUrl).ifBlank { LicenseCodes.SEE_ITEM_PAGE }
 
     val byFormat = listOf(setOf("VBR MP3", "MP3"), setOf("Ogg Vorbis"), setOf("Flac", "FLAC"))
     for (formats in byFormat) {
@@ -132,11 +133,11 @@ internal fun parseOpenverse(json: String): List<DownloadableTrack> {
         DownloadableTrack(
             providerId = "openverse",
             remoteId = item.str("id"),
-            title = item.str("title").ifBlank { "Untitled" },
+            title = item.str("title"),
             artist = item.str("creator"),
             album = item.optJSONObject("audio_set")?.str("title").orEmpty(),
             durationSec = if (item.isNull("duration")) null else item.optInt("duration") / 1000,
-            license = licenseText.ifBlank { "See source page" },
+            license = licenseText.ifBlank { LicenseCodes.SEE_SOURCE_PAGE },
             pageUrl = item.str("foreign_landing_url"),
             downloadUrl = url,
             coverUrl = item.str("thumbnail").takeIf { it.startsWith("https://") }.orEmpty(),
@@ -168,7 +169,7 @@ internal fun parseCommons(json: String): List<DownloadableTrack> {
             artist = stripHtml(meta("Artist")),
             album = "",
             durationSec = null,
-            license = stripHtml(meta("LicenseShortName")).ifBlank { "Free license" },
+            license = stripHtml(meta("LicenseShortName")).ifBlank { LicenseCodes.FREE_LICENSE },
             pageUrl = info.str("descriptionurl"),
             downloadUrl = url,
             coverUrl = "",
@@ -202,7 +203,7 @@ internal fun parseCcMixter(json: String): List<DownloadableTrack> {
         DownloadableTrack(
             providerId = "ccmixter",
             remoteId = upload.str("upload_id").ifBlank { url },
-            title = upload.str("upload_name").ifBlank { "Untitled" },
+            title = upload.str("upload_name"),
             artist = upload.str("user_real_name").ifBlank { upload.str("user_name") },
             album = "",
             durationSec = null,
@@ -226,11 +227,11 @@ internal fun parseJamendo(json: String): List<DownloadableTrack> {
         DownloadableTrack(
             providerId = "jamendo",
             remoteId = item.str("id"),
-            title = item.str("name").ifBlank { "Untitled" },
+            title = item.str("name"),
             artist = item.str("artist_name"),
             album = item.str("album_name"),
             durationSec = if (item.isNull("duration")) null else item.optInt("duration"),
-            license = shortLicense(item.str("license_ccurl")).ifBlank { "Creative Commons" },
+            license = shortLicense(item.str("license_ccurl")).ifBlank { LicenseCodes.CREATIVE_COMMONS },
             pageUrl = item.str("shareurl"),
             downloadUrl = url,
             coverUrl = item.str("image").takeIf { it.startsWith("https://") }.orEmpty(),
@@ -267,11 +268,11 @@ internal fun parseFeed(xml: ByteArray, limit: Int = 50): List<DownloadableTrack>
         out += DownloadableTrack(
             providerId = "feed",
             remoteId = item.childText("guid").ifBlank { url },
-            title = item.childText("title").ifBlank { "Untitled" },
+            title = item.childText("title"),
             artist = item.childText("itunes:author").ifBlank { channelAuthor },
             album = album,
             durationSec = null,
-            license = "From the feed publisher",
+            license = LicenseCodes.FEED_PUBLISHER,
             pageUrl = item.childText("link"),
             downloadUrl = url,
             coverUrl = "",

@@ -271,4 +271,22 @@
     <string name="settings_lyrics_first_summary">Now Playing starts on the lyrics tab</string>
     <string name="move_up">Move up</string>
     <string name="move_down">Move down</string>
+    <string name="settings_language">Language</string>
+    <string name="language_system">System default</string>
+    <string name="language_fa">فارسی</string>
+    <string name="language_en">English</string>
+    <string name="settings_value_dp">%s dp</string>
+    <string name="settings_value_percent">%s%%</string>
+    <string name="speed_value">%s×</string>
+    <string name="seek">Seek</string>
+    <string name="seek_state">%1$s of %2$s</string>
+    <string name="mini_player_open">Open the player</string>
+    <string name="downloads_channel_name">Downloads</string>
+    <string name="dl_notification_title">Downloading music</string>
+    <string name="license_see_item_page">See the item page</string>
+    <string name="license_see_source_page">See the source page</string>
+    <string name="license_free">Free license</string>
+    <string name="license_cc">Creative Commons</string>
+    <string name="license_feed">Set by the feed publisher</string>
+    <string name="license_user_link">Link provided by you</string>
 </resources>

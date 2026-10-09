@@ -17,6 +17,7 @@ import androidx.hilt.work.HiltWorker
 import androidx.work.CoroutineWorker
 import androidx.work.ForegroundInfo
 import androidx.work.WorkerParameters
+import com.gaabaariaa.music.R
 import com.gaabaariaa.music.data.local.DownloadDao
 import com.gaabaariaa.music.data.local.DownloadEntity
 import com.gaabaariaa.music.data.net.USER_AGENT
@@ -275,11 +276,11 @@ class DownloadWorker @AssistedInject constructor(
         val manager = appContext.getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             manager.createNotificationChannel(
-                NotificationChannel(CHANNEL_ID, "Downloads", NotificationManager.IMPORTANCE_LOW)
+                NotificationChannel(CHANNEL_ID, appContext.getString(R.string.downloads_channel_name), NotificationManager.IMPORTANCE_LOW)
             )
         }
         val notification = NotificationCompat.Builder(appContext, CHANNEL_ID)
-            .setContentTitle(title.ifBlank { "Download" })
+            .setContentTitle(title.ifBlank { appContext.getString(R.string.dl_notification_title) })
             .setSmallIcon(android.R.drawable.stat_sys_download)
             .setOngoing(true)
             .setOnlyAlertOnce(true)

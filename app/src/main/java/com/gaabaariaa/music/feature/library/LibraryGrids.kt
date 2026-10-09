@@ -31,6 +31,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.gaabaariaa.music.R
@@ -127,7 +129,7 @@ fun SongGrid(
             val selected = song.id in selection
             Box {
                 Card(
-                    Modifier.fillMaxWidth().combinedClickable(
+                    Modifier.fillMaxWidth().semantics { this.selected = selected }.combinedClickable(
                         onClick = {
                             if (selectionMode) onToggleSelect(song.id) else onPlay(songs, songs.indexOf(song))
                         },

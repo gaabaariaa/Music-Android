@@ -3,6 +3,7 @@ package com.gaabaariaa.music.feature.settings
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.gaabaariaa.music.domain.model.Accent
+import com.gaabaariaa.music.domain.model.AppLanguage
 import com.gaabaariaa.music.domain.model.AppSettings
 import com.gaabaariaa.music.domain.model.CardShape
 import com.gaabaariaa.music.domain.model.HomeSection
@@ -14,6 +15,8 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
@@ -22,14 +25,25 @@ class SettingsViewModel @Inject constructor(
     private val repository: SettingsRepository
 ) : ViewModel() {
 
+    // The first value is read synchronously (a few milliseconds), so the very first frame already has the
+    // saved theme and language instead of flashing the defaults.
     val settings: StateFlow<AppSettings> = repository.settings
-        .stateIn(viewModelScope, SharingStarted.Eagerly, AppSettings())
+        .stateIn(
+            viewModelScope,
+            SharingStarted.Eagerly,
+            try {
+                runBlocking { repository.settings.first() }
+            } catch (e: Exception) {
+                AppSettings()
+            }
+        )
 
     fun setThemeMode(mode: ThemeMode) { viewModelScope.launch { repository.setThemeMode(mode) } }
     fun setDynamicColor(enabled: Boolean) { viewModelScope.launch { repository.setDynamicColor(enabled) } }
     fun setAmoled(enabled: Boolean) { viewModelScope.launch { repository.setAmoled(enabled) } }
     fun setDownloadWifiOnly(enabled: Boolean) { viewModelScope.launch { repository.setDownloadWifiOnly(enabled) } }
     fun setJamendoClientId(id: String) { viewModelScope.launch { repository.setJamendoClientId(id) } }
+    fun setLanguage(language: AppLanguage) { viewModelScope.launch { repository.setLanguage(language) } }
     fun setCornerRadius(dp: Int) { viewModelScope.launch { repository.setCornerRadius(dp) } }
     fun setCardShape(shape: CardShape) { viewModelScope.launch { repository.setCardShape(shape) } }
     fun setTextScale(scale: Float) { viewModelScope.launch { repository.setTextScale(scale) } }
