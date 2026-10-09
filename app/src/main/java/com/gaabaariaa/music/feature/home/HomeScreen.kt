@@ -43,6 +43,7 @@ import com.gaabaariaa.music.domain.model.Song
 import com.gaabaariaa.music.domain.repository.HealthRepository
 import com.gaabaariaa.music.domain.repository.LibraryRepository
 import com.gaabaariaa.music.domain.repository.PersonalRepository
+import com.gaabaariaa.music.feature.health.label
 import com.gaabaariaa.music.feature.library.DetailType
 import com.gaabaariaa.music.feature.player.SongArtwork
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -263,4 +264,4 @@ private fun MissingAudited(
     }
 }
 
-private fun issueLabel(issue: HealthIssue): Int = com.gaabaariaa.music.feature.health.run { issue.label() }
+private fun issueLabel(issue: HealthIssue): Int = issue.label()
