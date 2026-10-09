@@ -20,6 +20,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.material.icons.filled.FavoriteBorder
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Repeat
@@ -47,6 +49,7 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -57,11 +60,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.Player
 import com.gaabaariaa.music.R
 import com.gaabaariaa.music.core.util.formatDuration
+import com.gaabaariaa.music.core.designsystem.LocalAppSettings
+import com.gaabaariaa.music.feature.library.LocalFavorites
 import com.gaabaariaa.music.feature.lyrics.LyricsPane
 
 private val speedOptions = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f, 2f)
@@ -127,6 +133,12 @@ fun NowPlayingScreen(
 ) {
     // Two panes on tablets and phones in landscape.
     val wide = LocalConfiguration.current.screenWidthDp >= 600
+    val keepScreenOn = LocalAppSettings.current.keepScreenOn
+    val view = LocalView.current
+    DisposableEffect(keepScreenOn) {
+        view.keepScreenOn = keepScreenOn
+        onDispose { view.keepScreenOn = false }
+    }
 
     Scaffold(
         topBar = {
@@ -185,11 +197,26 @@ private fun ColumnScope.PlayerPane(
     Spacer(Modifier.height(8.dp))
     SongArtwork(state.mediaId, Modifier.size(artworkSize).align(Alignment.CenterHorizontally))
     Spacer(Modifier.height(16.dp))
-    Text(
-        state.title.ifBlank { stringResource(R.string.unknown_title) },
-        style = MaterialTheme.typography.headlineSmall,
-        maxLines = 2
-    )
+    val favorites = LocalFavorites.current
+    val songId = state.mediaId.toLongOrNull()
+    val isFavorite = songId != null && songId in favorites.ids
+    Row(verticalAlignment = Alignment.CenterVertically) {
+        Text(
+            state.title.ifBlank { stringResource(R.string.unknown_title) },
+            style = MaterialTheme.typography.headlineSmall,
+            maxLines = 2,
+            modifier = Modifier.weight(1f)
+        )
+        if (songId != null) {
+            IconButton(onClick = { favorites.toggle(songId) }) {
+                Icon(
+                    if (isFavorite) Icons.Default.Favorite else Icons.Default.FavoriteBorder,
+                    stringResource(if (isFavorite) R.string.menu_unfavorite else R.string.menu_favorite),
+                    tint = if (isFavorite) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
+    }
     Text(state.artist.ifBlank { stringResource(R.string.unknown_artist) }, style = MaterialTheme.typography.titleMedium)
     Text(state.album.ifBlank { stringResource(R.string.unknown_album) }, style = MaterialTheme.typography.bodyMedium)
 
@@ -319,7 +346,8 @@ private fun ColumnScope.QueueAndLyricsPane(
     onSeek: (Long) -> Unit,
     onOpenLyrics: (Long) -> Unit
 ) {
-    var tab by rememberSaveable { mutableIntStateOf(0) }
+    val lyricsFirst = LocalAppSettings.current.lyricsFirst
+    var tab by rememberSaveable { mutableIntStateOf(if (lyricsFirst) 1 else 0) }
     TabRow(selectedTabIndex = tab) {
         Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.queue)) })
         Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.lyrics_title)) })

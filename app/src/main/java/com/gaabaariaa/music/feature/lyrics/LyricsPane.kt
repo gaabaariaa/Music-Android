@@ -25,6 +25,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.gaabaariaa.music.R
+import com.gaabaariaa.music.core.designsystem.LocalAppSettings
 import com.gaabaariaa.music.core.util.currentLineIndex
 import com.gaabaariaa.music.core.util.parseLyrics
 import com.gaabaariaa.music.domain.model.Lyrics
@@ -66,9 +67,13 @@ fun LyricsPane(
     }
 
     val listState = rememberLazyListState()
+    val animate = LocalAppSettings.current.animationsEnabled
     val currentIndex = if (parsed.synced) currentLineIndex(parsed.lines, positionMs) else -1
     LaunchedEffect(currentIndex) {
-        if (currentIndex >= 0) listState.animateScrollToItem((currentIndex - 2).coerceAtLeast(0))
+        if (currentIndex >= 0) {
+            val target = (currentIndex - 2).coerceAtLeast(0)
+            if (animate) listState.animateScrollToItem(target) else listState.scrollToItem(target)
+        }
     }
 
     Column(modifier.fillMaxSize()) {

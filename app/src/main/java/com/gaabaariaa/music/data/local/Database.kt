@@ -36,13 +36,13 @@ data class SongEntity(
     @ColumnInfo(defaultValue = "0") val bitrate: Int = 0
 )
 
-data class ArtistRow(val name: String, val songCount: Int, val albumCount: Int)
+data class ArtistRow(val name: String, val songCount: Int, val albumCount: Int, val coverSongId: Long)
 
-data class AlbumRow(val name: String, val artist: String, val songCount: Int)
+data class AlbumRow(val name: String, val artist: String, val songCount: Int, val coverSongId: Long)
 
-data class GenreRow(val name: String, val songCount: Int)
+data class GenreRow(val name: String, val songCount: Int, val coverSongId: Long)
 
-data class FolderRow(val path: String, val songCount: Int)
+data class FolderRow(val path: String, val songCount: Int, val coverSongId: Long)
 
 @Dao
 interface SongDao {
@@ -50,21 +50,21 @@ interface SongDao {
     fun observeSongs(): Flow<List<SongEntity>>
 
     @Query(
-        "SELECT artist AS name, COUNT(*) AS songCount, COUNT(DISTINCT album) AS albumCount " +
+        "SELECT artist AS name, COUNT(*) AS songCount, COUNT(DISTINCT album) AS albumCount, MIN(mediaStoreId) AS coverSongId " +
             "FROM songs GROUP BY artist ORDER BY artist COLLATE NOCASE"
     )
     fun observeArtists(): Flow<List<ArtistRow>>
 
     @Query(
-        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount " +
+        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount, MIN(mediaStoreId) AS coverSongId " +
             "FROM songs GROUP BY album ORDER BY album COLLATE NOCASE"
     )
     fun observeAlbums(): Flow<List<AlbumRow>>
 
-    @Query("SELECT genre AS name, COUNT(*) AS songCount FROM songs GROUP BY genre ORDER BY genre COLLATE NOCASE")
+    @Query("SELECT genre AS name, COUNT(*) AS songCount, MIN(mediaStoreId) AS coverSongId FROM songs GROUP BY genre ORDER BY genre COLLATE NOCASE")
     fun observeGenres(): Flow<List<GenreRow>>
 
-    @Query("SELECT folder AS path, COUNT(*) AS songCount FROM songs GROUP BY folder ORDER BY folder COLLATE NOCASE")
+    @Query("SELECT folder AS path, COUNT(*) AS songCount, MIN(mediaStoreId) AS coverSongId FROM songs GROUP BY folder ORDER BY folder COLLATE NOCASE")
     fun observeFolders(): Flow<List<FolderRow>>
 
     @Query("SELECT * FROM songs WHERE artist = :artist ORDER BY album COLLATE NOCASE, track, title COLLATE NOCASE")
@@ -80,7 +80,7 @@ interface SongDao {
     fun observeSongsByFolder(folder: String): Flow<List<SongEntity>>
 
     @Query(
-        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount FROM songs " +
+        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount, MIN(mediaStoreId) AS coverSongId FROM songs " +
             "WHERE artist = :artist GROUP BY album ORDER BY album COLLATE NOCASE"
     )
     fun observeAlbumsByArtist(artist: String): Flow<List<AlbumRow>>
@@ -179,9 +179,22 @@ interface DownloadDao {
     suspend fun deleteFinished()
 }
 
+@Entity(tableName = "favorites")
+data class FavoriteEntity(@PrimaryKey val songId: Long, val addedAt: Long)
+
+@Entity(tableName = "play_history", indices = [Index("songId")])
+data class PlayEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val songId: Long,
+    val playedAt: Long
+)
+
 @Database(
-    entities = [SongEntity::class, LyricsEntity::class, AuditEntity::class, DownloadEntity::class],
-    version = 5,
+    entities = [
+        SongEntity::class, LyricsEntity::class, AuditEntity::class, DownloadEntity::class,
+        FavoriteEntity::class, PlayEntity::class
+    ],
+    version = 6,
     exportSchema = false
 )
 abstract class MusicDatabase : RoomDatabase() {
@@ -189,6 +202,7 @@ abstract class MusicDatabase : RoomDatabase() {
     abstract fun lyricsDao(): LyricsDao
     abstract fun insightsDao(): InsightsDao
     abstract fun downloadDao(): DownloadDao
+    abstract fun personalDao(): PersonalDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -235,5 +249,16 @@ val MIGRATION_4_5 = object : Migration(4, 5) {
                 "state TEXT NOT NULL, totalBytes INTEGER NOT NULL, downloadedBytes INTEGER NOT NULL, " +
                 "speedBps INTEGER NOT NULL, error TEXT NOT NULL, songId INTEGER NOT NULL, createdAt INTEGER NOT NULL)"
         )
+    }
+}
+
+val MIGRATION_5_6 = object : Migration(5, 6) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL("CREATE TABLE IF NOT EXISTS favorites (songId INTEGER NOT NULL, addedAt INTEGER NOT NULL, PRIMARY KEY(songId))")
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS play_history (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "songId INTEGER NOT NULL, playedAt INTEGER NOT NULL)"
+        )
+        db.execSQL("CREATE INDEX IF NOT EXISTS index_play_history_songId ON play_history(songId)")
     }
 }

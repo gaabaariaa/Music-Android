@@ -3,18 +3,30 @@ package com.gaabaariaa.music.core.designsystem
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
+import androidx.compose.foundation.shape.CornerBasedShape
+import androidx.compose.foundation.shape.CutCornerShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.unit.Density
+import androidx.compose.ui.unit.dp
 import com.gaabaariaa.music.domain.model.Accent
 import com.gaabaariaa.music.domain.model.AppSettings
+import com.gaabaariaa.music.domain.model.CardShape
 import com.gaabaariaa.music.domain.model.ThemeMode
+
+val LocalAppSettings = staticCompositionLocalOf { AppSettings() }
 
 val DynamicColorSupported: Boolean get() = Build.VERSION.SDK_INT >= Build.VERSION_CODES.S
 
@@ -35,7 +47,32 @@ fun MusicTheme(settings: AppSettings, content: @Composable () -> Unit) {
         else -> accentColorScheme(settings.accent, dark)
     }
     if (dark && settings.amoled) scheme = scheme.toAmoled()
-    MaterialTheme(colorScheme = scheme, typography = Typography(), content = content)
+    val density = LocalDensity.current
+    CompositionLocalProvider(
+        LocalAppSettings provides settings,
+        // Multiplies the system font size, so accessibility font scaling still applies.
+        LocalDensity provides Density(density.density, density.fontScale * settings.textScale)
+    ) {
+        MaterialTheme(
+            colorScheme = scheme,
+            typography = Typography(),
+            shapes = appShapes(settings),
+            content = content
+        )
+    }
+}
+
+private fun appShapes(settings: AppSettings): Shapes {
+    val r = settings.cornerRadiusDp
+    fun shape(dp: Int): CornerBasedShape =
+        if (settings.cardShape == CardShape.CUT) CutCornerShape(dp.dp) else RoundedCornerShape(dp.dp)
+    return Shapes(
+        extraSmall = shape((r / 4).coerceAtLeast(0)),
+        small = shape(r / 2),
+        medium = shape(r),
+        large = shape(r + 4),
+        extraLarge = shape(r + 12)
+    )
 }
 
 private class Palette(

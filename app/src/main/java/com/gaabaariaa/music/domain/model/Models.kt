@@ -18,13 +18,13 @@ data class Song(
     val bitrate: Int = 0
 )
 
-data class ArtistSummary(val name: String, val songCount: Int, val albumCount: Int)
+data class ArtistSummary(val name: String, val songCount: Int, val albumCount: Int, val coverSongId: Long = 0)
 
-data class AlbumSummary(val name: String, val artist: String, val songCount: Int)
+data class AlbumSummary(val name: String, val artist: String, val songCount: Int, val coverSongId: Long = 0)
 
-data class GenreSummary(val name: String, val songCount: Int)
+data class GenreSummary(val name: String, val songCount: Int, val coverSongId: Long = 0)
 
-data class FolderSummary(val path: String, val songCount: Int)
+data class FolderSummary(val path: String, val songCount: Int, val coverSongId: Long = 0)
 
 data class ScanState(
     val scanning: Boolean = false,
@@ -44,8 +44,65 @@ data class AppSettings(
     val amoled: Boolean = false,
     val accent: Accent = Accent.PURPLE,
     val downloadWifiOnly: Boolean = false,
-    val jamendoClientId: String = ""
+    val jamendoClientId: String = "",
+    val cornerRadiusDp: Int = 16,
+    val cardShape: CardShape = CardShape.ROUNDED,
+    val textScale: Float = 1f,
+    val libraryLayout: LibraryLayout = LibraryLayout.LIST,
+    val gridColumns: Int = 2,
+    val showArtwork: Boolean = true,
+    val animationsEnabled: Boolean = true,
+    val miniPlayerEnabled: Boolean = true,
+    val keepScreenOn: Boolean = false,
+    val lyricsFirst: Boolean = false,
+    val libraryTabs: List<LibraryTab> = LibraryTab.entries.toList(),
+    val homeSections: List<HomeSectionConfig> = defaultHomeSections()
 )
+
+enum class CardShape { ROUNDED, CUT }
+
+enum class LibraryLayout { LIST, GRID }
+
+enum class LibraryTab { SONGS, ARTISTS, ALBUMS, GENRES, FOLDERS }
+
+enum class HomeSection {
+    RECENTLY_PLAYED, RECENTLY_ADDED, MOST_PLAYED, FAVORITES, RECENTLY_DOWNLOADED,
+    ARTISTS, ALBUMS, GENRES, MISSING_METADATA, MISSING_ARTWORK, MISSING_LYRICS
+}
+
+data class HomeSectionConfig(val section: HomeSection, val enabled: Boolean)
+
+fun defaultHomeSections(): List<HomeSectionConfig> = HomeSection.entries.map {
+    HomeSectionConfig(
+        it,
+        enabled = it !in setOf(
+            HomeSection.GENRES, HomeSection.MISSING_METADATA, HomeSection.MISSING_ARTWORK, HomeSection.MISSING_LYRICS
+        )
+    )
+}
+
+/** "SECTION:1,OTHER:0"; unknown names are dropped and sections missing from the text are appended. */
+fun encodeHomeSections(list: List<HomeSectionConfig>): String =
+    list.joinToString(",") { it.section.name + ":" + (if (it.enabled) "1" else "0") }
+
+fun decodeHomeSections(text: String?): List<HomeSectionConfig> {
+    val defaults = defaultHomeSections()
+    if (text.isNullOrBlank()) return defaults
+    val parsed = text.split(',').mapNotNull { entry ->
+        val parts = entry.split(':')
+        val section = HomeSection.entries.firstOrNull { it.name == parts.getOrNull(0) } ?: return@mapNotNull null
+        HomeSectionConfig(section, parts.getOrNull(1) == "1")
+    }.distinctBy { it.section }
+    return parsed + defaults.filter { d -> parsed.none { it.section == d.section } }
+}
+
+fun encodeLibraryTabs(list: List<LibraryTab>): String = list.joinToString(",") { it.name }
+
+fun decodeLibraryTabs(text: String?): List<LibraryTab> {
+    if (text.isNullOrBlank()) return LibraryTab.entries.toList()
+    val parsed = text.split(',').mapNotNull { name -> LibraryTab.entries.firstOrNull { it.name == name } }.distinct()
+    return parsed + LibraryTab.entries.filter { it !in parsed }
+}
 
 enum class TagField { TITLE, ARTIST, ALBUM, ALBUM_ARTIST, GENRE, YEAR, TRACK, DISC, COMPOSER, COMMENT, LYRICS }
 

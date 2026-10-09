@@ -5,6 +5,10 @@ import com.gaabaariaa.music.domain.model.AlbumSummary
 import com.gaabaariaa.music.domain.model.AppSettings
 import com.gaabaariaa.music.domain.model.ArtworkSearchResult
 import com.gaabaariaa.music.domain.model.AuditState
+import com.gaabaariaa.music.domain.model.CardShape
+import com.gaabaariaa.music.domain.model.HomeSectionConfig
+import com.gaabaariaa.music.domain.model.LibraryLayout
+import com.gaabaariaa.music.domain.model.LibraryTab
 import com.gaabaariaa.music.domain.model.DownloadItem
 import com.gaabaariaa.music.domain.model.DownloadableTrack
 import com.gaabaariaa.music.domain.model.SourceInfo
@@ -59,6 +63,18 @@ interface SettingsRepository {
     suspend fun setAccent(accent: Accent)
     suspend fun setDownloadWifiOnly(enabled: Boolean)
     suspend fun setJamendoClientId(id: String)
+    suspend fun setCornerRadius(dp: Int)
+    suspend fun setCardShape(shape: CardShape)
+    suspend fun setTextScale(scale: Float)
+    suspend fun setLibraryLayout(layout: LibraryLayout)
+    suspend fun setGridColumns(columns: Int)
+    suspend fun setShowArtwork(enabled: Boolean)
+    suspend fun setAnimations(enabled: Boolean)
+    suspend fun setMiniPlayer(enabled: Boolean)
+    suspend fun setKeepScreenOn(enabled: Boolean)
+    suspend fun setLyricsFirst(enabled: Boolean)
+    suspend fun setLibraryTabs(tabs: List<LibraryTab>)
+    suspend fun setHomeSections(sections: List<HomeSectionConfig>)
 }
 
 /** Runs library scans in the background and reports their progress. */
@@ -151,4 +167,17 @@ interface DownloadRepository {
 
     /** Re-schedules downloads that were running when the process died. */
     suspend fun reconcile()
+}
+
+/** Favorites, play history and the song lists built from them. */
+interface PersonalRepository {
+    fun observeFavoriteIds(): Flow<Set<Long>>
+    suspend fun toggleFavorite(songId: Long)
+    suspend fun recordPlay(songId: Long)
+
+    fun observeRecentlyAdded(limit: Int): Flow<List<Song>>
+    fun observeRecentlyPlayed(limit: Int): Flow<List<Song>>
+    fun observeMostPlayed(limit: Int): Flow<List<Song>>
+    fun observeFavorites(limit: Int): Flow<List<Song>>
+    fun observeRecentlyDownloaded(limit: Int): Flow<List<Song>>
 }

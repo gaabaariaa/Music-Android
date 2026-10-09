@@ -41,10 +41,10 @@ class SearchRepositoryImpl @Inject constructor(
         val like = "%" + escapeLike(text) + "%"
         SearchResults(
             songs = dao.searchSongs(like, 100).map { it.toDomain() },
-            artists = dao.searchArtists(like).map { ArtistSummary(it.name, it.songCount, it.albumCount) },
-            albums = dao.searchAlbums(like).map { AlbumSummary(it.name, it.artist, it.songCount) },
-            genres = dao.searchGenres(like).map { GenreSummary(it.name, it.songCount) },
-            folders = dao.searchFolders(like).map { FolderSummary(it.path, it.songCount) },
+            artists = dao.searchArtists(like).map { ArtistSummary(it.name, it.songCount, it.albumCount, it.coverSongId) },
+            albums = dao.searchAlbums(like).map { AlbumSummary(it.name, it.artist, it.songCount, it.coverSongId) },
+            genres = dao.searchGenres(like).map { GenreSummary(it.name, it.songCount, it.coverSongId) },
+            folders = dao.searchFolders(like).map { FolderSummary(it.path, it.songCount, it.coverSongId) },
             lyricMatches = dao.searchLyrics(like).map {
                 LyricsMatch(it.song.toDomain(), lyricSnippet(it.lyricContent, text))
             }
