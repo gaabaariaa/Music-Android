@@ -80,7 +80,7 @@ interface SongDao {
     fun observeSongsByFolder(folder: String): Flow<List<SongEntity>>
 
     @Query(
-        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount FROM songs " +
+        "SELECT album AS name, MIN(artist) AS artist, COUNT(*) AS songCount, MIN(mediaStoreId) AS coverSongId FROM songs " +
             "WHERE artist = :artist GROUP BY album ORDER BY album COLLATE NOCASE"
     )
     fun observeAlbumsByArtist(artist: String): Flow<List<AlbumRow>>

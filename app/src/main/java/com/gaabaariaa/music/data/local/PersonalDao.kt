@@ -27,8 +27,8 @@ interface PersonalDao {
     fun observeRecentlyAdded(limit: Int): Flow<List<SongEntity>>
 
     @Query(
-        "SELECT s.* FROM songs s JOIN (SELECT songId, MAX(playedAt) AS last FROM play_history GROUP BY songId) h " +
-            "ON h.songId = s.mediaStoreId ORDER BY h.last DESC LIMIT :limit"
+        "SELECT s.* FROM songs s JOIN (SELECT songId, MAX(playedAt) AS lastPlayed FROM play_history GROUP BY songId) h " +
+            "ON h.songId = s.mediaStoreId ORDER BY h.lastPlayed DESC LIMIT :limit"
     )
     fun observeRecentlyPlayed(limit: Int): Flow<List<SongEntity>>
 
