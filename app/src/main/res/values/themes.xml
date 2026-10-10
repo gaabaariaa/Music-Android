@@ -1,3 +1,10 @@
 <resources>
     <style name="Theme.Music" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Shown while the app starts; switches to Theme.Music afterwards. -->
+    <style name="Theme.Music.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash</item>
+        <item name="postSplashScreenTheme">@style/Theme.Music</item>
+    </style>
 </resources>
