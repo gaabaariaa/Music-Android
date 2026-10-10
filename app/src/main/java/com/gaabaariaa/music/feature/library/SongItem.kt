@@ -36,6 +36,7 @@ import com.gaabaariaa.music.R
 import com.gaabaariaa.music.core.designsystem.LocalAppSettings
 import com.gaabaariaa.music.core.util.formatDuration
 import com.gaabaariaa.music.domain.model.Song
+import com.gaabaariaa.music.feature.playlists.PlaylistPickerDialog
 import com.gaabaariaa.music.feature.player.SongArtwork
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -124,12 +125,21 @@ fun SongMenu(
     val context = LocalContext.current
     val favorites = LocalFavorites.current
     val isFavorite = song.id in favorites.ids
+    var pickerOpen by remember { mutableStateOf(false) }
+    if (pickerOpen) PlaylistPickerDialog(listOf(song.id)) { pickerOpen = false }
     DropdownMenu(expanded = expanded, onDismissRequest = onDismiss) {
         DropdownMenuItem(
             text = { Text(stringResource(if (isFavorite) R.string.menu_unfavorite else R.string.menu_favorite)) },
             onClick = {
                 onDismiss()
                 favorites.toggle(song.id)
+            }
+        )
+        DropdownMenuItem(
+            text = { Text(stringResource(R.string.menu_add_to_playlist)) },
+            onClick = {
+                onDismiss()
+                pickerOpen = true
             }
         )
         DropdownMenuItem(

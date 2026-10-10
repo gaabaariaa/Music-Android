@@ -76,10 +76,10 @@ enum class CardShape { ROUNDED, CUT }
 
 enum class LibraryLayout { LIST, GRID }
 
-enum class LibraryTab { SONGS, ARTISTS, ALBUMS, GENRES, FOLDERS }
+enum class LibraryTab { SONGS, ARTISTS, ALBUMS, GENRES, FOLDERS, PLAYLISTS }
 
 enum class HomeSection {
-    RECENTLY_PLAYED, RECENTLY_ADDED, MOST_PLAYED, FAVORITES, RECENTLY_DOWNLOADED,
+    RECENTLY_PLAYED, RECENTLY_ADDED, MOST_PLAYED, FAVORITES, RECENTLY_DOWNLOADED, PLAYLISTS,
     ARTISTS, ALBUMS, GENRES, MISSING_METADATA, MISSING_ARTWORK, MISSING_LYRICS
 }
 
@@ -241,3 +241,29 @@ data class SourceSearchOutcome(
     val tracks: List<DownloadableTrack> = emptyList(),
     val errors: Map<String, SourceError> = emptyMap()
 )
+
+enum class SmartRuleType {
+    RECENTLY_ADDED, MOST_PLAYED, NEVER_PLAYED, FAVORITES, GENRE, PERSIAN, HIGH_QUALITY, LONGER_THAN
+}
+
+/** A smart playlist is a rule, not a list: its songs are recalculated whenever the library changes. */
+data class SmartRule(val type: SmartRuleType, val param: String = "") {
+    fun encode(): String = type.name + ":" + param
+}
+
+fun decodeSmartRule(text: String?): SmartRule? {
+    if (text.isNullOrBlank()) return null
+    val type = SmartRuleType.entries.firstOrNull { it.name == text.substringBefore(':') } ?: return null
+    return SmartRule(type, text.substringAfter(':', ""))
+}
+
+data class Playlist(
+    val id: Long,
+    val name: String,
+    val smartRule: SmartRule?,
+    /** -1 for smart playlists, whose size is only known when they are opened. */
+    val songCount: Int,
+    val coverSongId: Long
+) {
+    val isSmart: Boolean get() = smartRule != null
+}

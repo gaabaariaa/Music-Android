@@ -18,6 +18,8 @@ import com.gaabaariaa.music.domain.model.HealthIssue
 import com.gaabaariaa.music.domain.model.LibraryHealth
 import com.gaabaariaa.music.domain.model.Lyrics
 import com.gaabaariaa.music.domain.model.OnlineLyricsResult
+import com.gaabaariaa.music.domain.model.Playlist
+import com.gaabaariaa.music.domain.model.SmartRule
 import com.gaabaariaa.music.domain.model.SearchResults
 import com.gaabaariaa.music.domain.model.ArtistSummary
 import com.gaabaariaa.music.domain.model.FolderSummary
@@ -182,4 +184,20 @@ interface PersonalRepository {
     fun observeMostPlayed(limit: Int): Flow<List<Song>>
     fun observeFavorites(limit: Int): Flow<List<Song>>
     fun observeRecentlyDownloaded(limit: Int): Flow<List<Song>>
+}
+
+interface PlaylistRepository {
+    fun observePlaylists(): Flow<List<Playlist>>
+    fun observePlaylist(id: Long): Flow<Playlist?>
+    fun observeSongs(playlistId: Long): Flow<List<Song>>
+
+    suspend fun createManual(name: String): Long
+    suspend fun createSmart(name: String, rule: SmartRule): Long
+    suspend fun rename(id: Long, name: String)
+    suspend fun delete(id: Long)
+
+    /** Adds songs that are not in the playlist yet; returns how many were added. */
+    suspend fun addSongs(playlistId: Long, songIds: List<Long>): Int
+    suspend fun removeSong(playlistId: Long, songId: Long)
+    suspend fun reorder(playlistId: Long, orderedSongIds: List<Long>)
 }

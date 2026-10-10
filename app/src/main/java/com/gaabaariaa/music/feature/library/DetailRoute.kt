@@ -2,7 +2,7 @@ package com.gaabaariaa.music.feature.library
 
 import java.util.Base64
 
-enum class DetailType { ARTIST, ALBUM, GENRE, FOLDER, ISSUE }
+enum class DetailType { ARTIST, ALBUM, GENRE, FOLDER, ISSUE, PLAYLIST }
 
 const val DETAIL_ROUTE = "detail/{type}/{value}"
 

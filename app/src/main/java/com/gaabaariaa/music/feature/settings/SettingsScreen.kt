@@ -374,6 +374,7 @@ private fun LibraryTab.titleRes(): Int = when (this) {
     LibraryTab.ALBUMS -> R.string.tab_albums
     LibraryTab.GENRES -> R.string.tab_genres
     LibraryTab.FOLDERS -> R.string.tab_folders
+    LibraryTab.PLAYLISTS -> R.string.tab_playlists
 }
 
 private fun ThemeMode.label(): Int = when (this) {

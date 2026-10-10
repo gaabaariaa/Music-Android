@@ -14,8 +14,8 @@ android {
         applicationId = "com.gaabaariaa.music"
         minSdk = 26
         targetSdk = 35
-        versionCode = 13
-        versionName = "0.13.0"
+        versionCode = 14
+        versionName = "0.14.0"
     }
 
     // Fixed debug key: every CI build is signed with the same key, so new APKs
