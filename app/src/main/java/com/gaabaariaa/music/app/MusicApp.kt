@@ -56,6 +56,9 @@ import com.gaabaariaa.music.feature.home.HomeScreen
 import com.gaabaariaa.music.feature.library.FavoritesState
 import com.gaabaariaa.music.feature.library.FavoritesViewModel
 import com.gaabaariaa.music.feature.library.LocalFavorites
+import com.gaabaariaa.music.feature.playlists.LocalPlaylistActions
+import com.gaabaariaa.music.feature.playlists.PlaylistActions
+import com.gaabaariaa.music.feature.playlists.PlaylistsViewModel
 import com.gaabaariaa.music.feature.health.HealthScreen
 import com.gaabaariaa.music.feature.library.DETAIL_ROUTE
 import com.gaabaariaa.music.feature.library.DetailScreen
@@ -97,8 +100,10 @@ private val topLevelDestinations = listOf(
 @Composable
 fun MusicApp(
     playerViewModel: PlayerViewModel = hiltViewModel(),
-    favoritesViewModel: FavoritesViewModel = hiltViewModel()
+    favoritesViewModel: FavoritesViewModel = hiltViewModel(),
+    playlistsViewModel: PlaylistsViewModel = hiltViewModel()
 ) {
+    val playlists by playlistsViewModel.playlists.collectAsStateWithLifecycle()
     val settings = LocalAppSettings.current
     val favoriteIds by favoritesViewModel.ids.collectAsStateWithLifecycle()
     val navController = rememberNavController()
@@ -123,7 +128,15 @@ fun MusicApp(
         }
     }
 
-    CompositionLocalProvider(LocalFavorites provides FavoritesState(favoriteIds, favoritesViewModel::toggle)) {
+    CompositionLocalProvider(
+        LocalFavorites provides FavoritesState(favoriteIds, favoritesViewModel::toggle),
+        LocalPlaylistActions provides PlaylistActions(
+            playlists,
+            playlistsViewModel::addTo,
+            playlistsViewModel::createAndAdd,
+            playlistsViewModel::create
+        )
+    ) {
     Scaffold(
         contentWindowInsets = WindowInsets(0.dp),
         bottomBar = {

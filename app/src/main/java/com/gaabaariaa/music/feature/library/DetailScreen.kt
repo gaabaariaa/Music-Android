@@ -3,6 +3,8 @@
 package com.gaabaariaa.music.feature.library
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -10,18 +12,31 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.ArrowDownward
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.SwapVert
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -56,12 +71,53 @@ fun DetailScreen(
             DetailType.GENRE -> R.string.unknown_genre
             DetailType.FOLDER -> R.string.unknown_folder
             DetailType.ISSUE -> R.string.unknown_title
+            DetailType.PLAYLIST -> R.string.unknown_title
         }
     )
-    val title = if (viewModel.type == DetailType.ISSUE) {
-        stringResource(HealthIssue.valueOf(viewModel.value).label())
-    } else {
-        viewModel.value.ifBlank { unknown }
+    val playlist by viewModel.playlist.collectAsStateWithLifecycle()
+    val isManualPlaylist = viewModel.type == DetailType.PLAYLIST && playlist?.isSmart == false
+    var editMode by remember { mutableStateOf(false) }
+    var showRename by remember { mutableStateOf(false) }
+    var showDelete by remember { mutableStateOf(false) }
+    val title = when (viewModel.type) {
+        DetailType.ISSUE -> stringResource(HealthIssue.valueOf(viewModel.value).label())
+        DetailType.PLAYLIST -> playlist?.name.orEmpty()
+        else -> viewModel.value.ifBlank { unknown }
+    }
+
+    if (showRename) {
+        var newName by remember { mutableStateOf(playlist?.name.orEmpty()) }
+        AlertDialog(
+            onDismissRequest = { showRename = false },
+            title = { Text(stringResource(R.string.playlist_rename)) },
+            text = {
+                OutlinedTextField(
+                    value = newName, onValueChange = { newName = it }, singleLine = true,
+                    label = { Text(stringResource(R.string.playlist_name)) }
+                )
+            },
+            confirmButton = {
+                TextButton(enabled = newName.isNotBlank(), onClick = {
+                    viewModel.rename(newName)
+                    showRename = false
+                }) { Text(stringResource(R.string.action_save)) }
+            },
+            dismissButton = { TextButton(onClick = { showRename = false }) { Text(stringResource(R.string.action_cancel)) } }
+        )
+    }
+    if (showDelete) {
+        AlertDialog(
+            onDismissRequest = { showDelete = false },
+            title = { Text(stringResource(R.string.playlist_delete)) },
+            text = { Text(stringResource(R.string.playlist_delete_confirm, title)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDelete = false
+                    viewModel.deletePlaylist(onBack)
+                }) { Text(stringResource(R.string.action_delete)) }
+            },
+            dismissButton = { TextButton(onClick = { showDelete = false }) { Text(stringResource(R.string.action_cancel)) } }
+        )
     }
 
     Scaffold(
@@ -71,6 +127,21 @@ fun DetailScreen(
                 navigationIcon = {
                     IconButton(onClick = onBack) {
                         Icon(Icons.AutoMirrored.Filled.ArrowBack, stringResource(R.string.back))
+                    }
+                },
+                actions = {
+                    if (viewModel.type == DetailType.PLAYLIST && playlist != null) {
+                        if (isManualPlaylist) {
+                            IconButton(onClick = { editMode = !editMode }) {
+                                Icon(Icons.Default.SwapVert, stringResource(R.string.playlist_edit_order))
+                            }
+                        }
+                        IconButton(onClick = { showRename = true }) {
+                            Icon(Icons.Default.Edit, stringResource(R.string.playlist_rename))
+                        }
+                        IconButton(onClick = { showDelete = true }) {
+                            Icon(Icons.Default.Delete, stringResource(R.string.playlist_delete))
+                        }
                     }
                 }
             )
@@ -113,7 +184,37 @@ fun DetailScreen(
                     )
                 }
             }
+            if (viewModel.type == DetailType.PLAYLIST && songs.isEmpty()) {
+                item {
+                    Text(
+                        stringResource(if (playlist?.isSmart == true) R.string.playlist_empty_smart else R.string.playlist_empty),
+                        Modifier.padding(16.dp)
+                    )
+                }
+            }
             itemsIndexed(songs, key = { _, song -> "song:" + song.id }) { index, song ->
+                if (editMode && isManualPlaylist) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(start = 16.dp, end = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            song.title.ifBlank { stringResource(R.string.unknown_title) },
+                            modifier = Modifier.weight(1f), maxLines = 1
+                        )
+                        IconButton(onClick = { viewModel.moveInPlaylist(index, -1) }, enabled = index > 0) {
+                            Icon(Icons.Default.ArrowUpward, stringResource(R.string.move_up))
+                        }
+                        IconButton(onClick = { viewModel.moveInPlaylist(index, 1) }, enabled = index < songs.lastIndex) {
+                            Icon(Icons.Default.ArrowDownward, stringResource(R.string.move_down))
+                        }
+                        IconButton(onClick = { viewModel.removeFromPlaylist(song.id) }) {
+                            Icon(Icons.Default.Close, stringResource(R.string.playlist_remove))
+                        }
+                    }
+                    HorizontalDivider()
+                    return@itemsIndexed
+                }
                 SongItem(
                     song,
                     onClick = { onPlay(songs, index) },

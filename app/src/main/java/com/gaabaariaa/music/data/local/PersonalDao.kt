@@ -6,8 +6,13 @@ import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import kotlinx.coroutines.flow.Flow
 
+data class PlayCountRow(val songId: Long, val plays: Int)
+
 @Dao
 interface PersonalDao {
+    @Query("SELECT songId, COUNT(*) AS plays FROM play_history GROUP BY songId")
+    fun observePlayCounts(): Flow<List<PlayCountRow>>
+
     @Query("SELECT songId FROM favorites")
     fun observeFavoriteIds(): Flow<List<Long>>
 

@@ -189,12 +189,29 @@ data class PlayEntity(
     val playedAt: Long
 )
 
+@Entity(tableName = "playlists")
+data class PlaylistEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val name: String,
+    /** Empty for a manual playlist, otherwise an encoded smart rule. */
+    val smartRule: String,
+    val createdAt: Long
+)
+
+@Entity(tableName = "playlist_songs", primaryKeys = ["playlistId", "songId"])
+data class PlaylistSongEntity(
+    val playlistId: Long,
+    val songId: Long,
+    val position: Int,
+    val addedAt: Long
+)
+
 @Database(
     entities = [
         SongEntity::class, LyricsEntity::class, AuditEntity::class, DownloadEntity::class,
-        FavoriteEntity::class, PlayEntity::class
+        FavoriteEntity::class, PlayEntity::class, PlaylistEntity::class, PlaylistSongEntity::class
     ],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 abstract class MusicDatabase : RoomDatabase() {
@@ -203,6 +220,7 @@ abstract class MusicDatabase : RoomDatabase() {
     abstract fun insightsDao(): InsightsDao
     abstract fun downloadDao(): DownloadDao
     abstract fun personalDao(): PersonalDao
+    abstract fun playlistDao(): PlaylistDao
 }
 
 val MIGRATION_1_2 = object : Migration(1, 2) {
@@ -260,5 +278,18 @@ val MIGRATION_5_6 = object : Migration(5, 6) {
                 "songId INTEGER NOT NULL, playedAt INTEGER NOT NULL)"
         )
         db.execSQL("CREATE INDEX IF NOT EXISTS index_play_history_songId ON play_history(songId)")
+    }
+}
+
+val MIGRATION_6_7 = object : Migration(6, 7) {
+    override fun migrate(db: SupportSQLiteDatabase) {
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS playlists (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, " +
+                "name TEXT NOT NULL, smartRule TEXT NOT NULL, createdAt INTEGER NOT NULL)"
+        )
+        db.execSQL(
+            "CREATE TABLE IF NOT EXISTS playlist_songs (playlistId INTEGER NOT NULL, songId INTEGER NOT NULL, " +
+                "position INTEGER NOT NULL, addedAt INTEGER NOT NULL, PRIMARY KEY(playlistId, songId))"
+        )
     }
 }

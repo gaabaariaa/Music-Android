@@ -45,6 +45,7 @@ import com.gaabaariaa.music.domain.model.Song
 import com.gaabaariaa.music.domain.repository.HealthRepository
 import com.gaabaariaa.music.domain.repository.LibraryRepository
 import com.gaabaariaa.music.domain.repository.PersonalRepository
+import com.gaabaariaa.music.domain.repository.PlaylistRepository
 import com.gaabaariaa.music.feature.health.label
 import com.gaabaariaa.music.feature.library.DetailType
 import com.gaabaariaa.music.feature.player.SongArtwork
@@ -64,6 +65,7 @@ fun HomeSection.titleRes(): Int = when (this) {
     HomeSection.MOST_PLAYED -> R.string.home_most_played
     HomeSection.FAVORITES -> R.string.home_favorites
     HomeSection.RECENTLY_DOWNLOADED -> R.string.home_recently_downloaded
+    HomeSection.PLAYLISTS -> R.string.tab_playlists
     HomeSection.ARTISTS -> R.string.tab_artists
     HomeSection.ALBUMS -> R.string.tab_albums
     HomeSection.GENRES -> R.string.tab_genres
@@ -76,7 +78,8 @@ fun HomeSection.titleRes(): Int = when (this) {
 class HomeViewModel @Inject constructor(
     personal: PersonalRepository,
     library: LibraryRepository,
-    healthRepository: HealthRepository
+    healthRepository: HealthRepository,
+    playlistRepository: PlaylistRepository
 ) : ViewModel() {
     // Each list only runs while its section is on screen.
     private fun <T> Flow<T>.share(initial: T): StateFlow<T> =
@@ -97,6 +100,7 @@ class HomeViewModel @Inject constructor(
         .map { list -> list.filter { it.name.isNotBlank() }.sortedByDescending { it.songCount }.take(ROW_LIMIT) }
         .share(emptyList())
     val health: StateFlow<LibraryHealth> = healthRepository.observeHealth().share(LibraryHealth())
+    val playlists = playlistRepository.observePlaylists().share(emptyList())
 }
 
 @Composable
@@ -122,6 +126,8 @@ fun HomeScreen(
                         HomeSection.MOST_PLAYED -> SongRow(section, viewModel.mostPlayed, onPlay)
                         HomeSection.FAVORITES -> SongRow(section, viewModel.favorites, onPlay)
                         HomeSection.RECENTLY_DOWNLOADED -> SongRow(section, viewModel.recentlyDownloaded, onPlay)
+                        HomeSection.PLAYLISTS -> SummaryRow(section, viewModel.playlists, { it.coverSongId }, { it.name },
+                            { stringResource(R.string.unknown_title) }) { onOpenDetail(DetailType.PLAYLIST, it.id.toString()) }
                         HomeSection.ARTISTS -> SummaryRow(section, viewModel.artists, { it.coverSongId }, { it.name },
                             { stringResource(R.string.unknown_artist) }) { onOpenDetail(DetailType.ARTIST, it.name) }
                         HomeSection.ALBUMS -> SummaryRow(section, viewModel.albums, { it.coverSongId }, { it.name },

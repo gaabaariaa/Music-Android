@@ -16,6 +16,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.Sort
+import androidx.compose.material.icons.automirrored.filled.PlaylistAdd
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Edit
@@ -59,6 +60,8 @@ import com.gaabaariaa.music.R
 import com.gaabaariaa.music.core.designsystem.LocalAppSettings
 import com.gaabaariaa.music.domain.model.LibraryLayout
 import com.gaabaariaa.music.domain.model.LibraryTab
+import com.gaabaariaa.music.feature.playlists.PlaylistPickerDialog
+import com.gaabaariaa.music.feature.playlists.PlaylistsTab
 import com.gaabaariaa.music.core.util.audioPermission
 import com.gaabaariaa.music.core.util.hasAudioPermission
 import com.gaabaariaa.music.domain.model.AlbumSummary
@@ -74,6 +77,7 @@ private fun LibraryTab.titleRes(): Int = when (this) {
     LibraryTab.ALBUMS -> R.string.tab_albums
     LibraryTab.GENRES -> R.string.tab_genres
     LibraryTab.FOLDERS -> R.string.tab_folders
+    LibraryTab.PLAYLISTS -> R.string.tab_playlists
 }
 
 @Composable
@@ -98,6 +102,13 @@ fun LibraryScreen(
     val query by viewModel.query.collectAsStateWithLifecycle()
     val sort by viewModel.sort.collectAsStateWithLifecycle()
     val selection by viewModel.selection.collectAsStateWithLifecycle()
+    var pickerIds by remember { mutableStateOf<List<Long>?>(null) }
+    pickerIds?.let { ids ->
+        PlaylistPickerDialog(ids) {
+            pickerIds = null
+            viewModel.clearSelection()
+        }
+    }
     BackHandler(enabled = selection.isNotEmpty()) { viewModel.clearSelection() }
 
     var granted by remember { mutableStateOf(hasAudioPermission(context)) }
@@ -125,6 +136,9 @@ fun LibraryScreen(
                     actions = {
                         IconButton(onClick = { viewModel.selectAll(songs.map { it.id }) }) {
                             Icon(Icons.Default.SelectAll, stringResource(R.string.select_all))
+                        }
+                        IconButton(onClick = { pickerIds = selection.toList() }) {
+                            Icon(Icons.AutoMirrored.Filled.PlaylistAdd, stringResource(R.string.menu_add_to_playlist))
                         }
                         IconButton(onClick = {
                             viewModel.startTagEdit(selection.toList())
@@ -212,6 +226,7 @@ fun LibraryScreen(
                     LibraryTab.ALBUMS -> SummaryCollection(albumItemsUi(albums)) { onOpenDetail(DetailType.ALBUM, it) }
                     LibraryTab.GENRES -> SummaryCollection(genreItems(genres)) { onOpenDetail(DetailType.GENRE, it) }
                     LibraryTab.FOLDERS -> SummaryCollection(folderItems(folders)) { onOpenDetail(DetailType.FOLDER, it) }
+                    LibraryTab.PLAYLISTS -> PlaylistsTab { onOpenDetail(DetailType.PLAYLIST, it.toString()) }
                 }
             }
         }
